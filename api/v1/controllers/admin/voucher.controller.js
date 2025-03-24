@@ -1,4 +1,32 @@
 const Voucher = require("../../models/voucher.model");
+const paginationHelper = require("../../../../helper/pagination");
+
+// [GET]/api/v1/admin/vouchers
+module.exports.index = async (req, res) => {
+    let find = { deleted: false };
+
+    // sort
+    const sort = {};
+    if (req.query.sortKey && req.query.sortValue) {
+        sort[req.query.sortKey] = req.query.sortValue;
+    }
+
+    // pagination
+    const countRecords = await Voucher.countDocuments(find);
+    let objPagination = paginationHelper(
+        {
+            currentPage: 1,
+            limitItems: 5
+        },
+        req.query,
+        countRecords
+    );
+    // end pagination
+
+    const vouchers = await Voucher.find().sort(sort).limit(objPagination.limitItems).skip(objPagination.skip);
+
+    res.json(vouchers);
+};
 
 // [POST]/api/v1/admin/vouchers/create
 module.exports.createPost = async (req, res) => {
