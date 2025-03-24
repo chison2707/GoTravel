@@ -32,3 +32,23 @@ module.exports.createPost = async (req, res) => {
         });
     }
 };
+
+// [PATCH]/api/v1/admin/vouchers/edit/:id
+module.exports.edit = async (req, res) => {
+    try {
+        const id = req.params.id;
+        await Voucher.updateOne({
+            _id: id
+        }, req.body);
+
+        res.json({
+            code: 200,
+            message: "Chỉnh sửa voucher thành công"
+        });
+    } catch (error) {
+        res.status(500).json({
+            code: 500,
+            message: "Lỗi khi chỉnh sửa voucher: " + error.message
+        });
+    }
+};

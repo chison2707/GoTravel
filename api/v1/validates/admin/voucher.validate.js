@@ -18,8 +18,29 @@ module.exports.voucherValidate = (req, res, next) => {
     if (new Date(req.body.endDate).getTime() < Date.now()) {
         errors.push('Ngày kết thúc phải lớn hơn ngày hiện tại!');
     }
-    if (new Date(req.body.endDate).startDate() >= new Date(req.body.endDate).getTime()) {
+    if (new Date(req.body.startDate).getTime() >= new Date(req.body.endDate).getTime()) {
         errors.push('Ngày bắt đầu phải nhỏ hơn ngày kết thúc!');
+    }
+    if (errors.length > 0) {
+        return res.status(400).json({
+            success: false,
+            errors: errors
+        });
+    }
+    next();
+}
+
+module.exports.editVoucher = (req, res, next) => {
+    const errors = [];
+    if (req.body.endDate) {
+        if (new Date(req.body.endDate).getTime() < Date.now()) {
+            errors.push('Ngày kết thúc phải lớn hơn ngày hiện tại!');
+        }
+    }
+    if (req.body.startDate) {
+        if (new Date(req.body.startDate).getTime() >= new Date(req.body.endDate).getTime()) {
+            errors.push('Ngày bắt đầu phải nhỏ hơn ngày kết thúc!');
+        }
     }
     if (errors.length > 0) {
         return res.status(400).json({
