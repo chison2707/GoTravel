@@ -52,3 +52,23 @@ module.exports.edit = async (req, res) => {
         });
     }
 };
+
+// [DELETE]/api/v1/admin/vouchers/delete/:id
+module.exports.delete = async (req, res) => {
+    try {
+        const id = req.params.id;
+        await Voucher.deleteOne({
+            _id: id
+        });
+
+        res.json({
+            code: 200,
+            message: "Xóa voucher thành công"
+        });
+    } catch (error) {
+        res.status(500).json({
+            code: 500,
+            message: "Lỗi khi xóa voucher: " + error.message
+        });
+    }
+};
