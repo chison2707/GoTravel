@@ -12,7 +12,13 @@ const VoucherSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-    deletedAt: Date
+    deletedAt: Date,
+    "expireAt": { type: Date, expires: 0 }
 }, { timestamps: true });
+
+VoucherSchema.pre("save", function (next) {
+    this.expireAt = this.endDate;
+    next();
+});
 const Voucher = mongoose.model('Voucher', VoucherSchema, "vouchers");
 module.exports = Voucher;
