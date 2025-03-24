@@ -100,3 +100,24 @@ module.exports.delete = async (req, res) => {
         });
     }
 };
+
+// [GET]/api/v1/admin/vouchers/detail/:id
+module.exports.detail = async (req, res) => {
+    try {
+        const id = req.params.id;
+        const data = await Voucher.findOne({
+            _id: id
+        });
+
+        res.json({
+            code: 200,
+            message: "Thành công",
+            data: data
+        });
+    } catch (error) {
+        res.status(500).json({
+            code: 500,
+            message: "Lỗi khi xóa voucher: " + error.message
+        });
+    }
+};

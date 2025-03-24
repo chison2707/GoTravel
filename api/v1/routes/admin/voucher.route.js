@@ -8,5 +8,6 @@ router.get("/", controller.index);
 router.post('/create', validate.voucherValidate, controller.createPost);
 router.patch('/edit/:id', validate.editVoucher, controller.edit);
 router.delete('/delete/:id', controller.delete);
+router.get('/detail/:id', controller.detail);
 
 module.exports = router;
