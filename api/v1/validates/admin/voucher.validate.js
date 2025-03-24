@@ -18,6 +18,9 @@ module.exports.voucherValidate = (req, res, next) => {
     if (new Date(req.body.endDate).getTime() < Date.now()) {
         errors.push('Ngày kết thúc phải lớn hơn ngày hiện tại!');
     }
+    if (new Date(req.body.endDate).startDate() >= new Date(req.body.endDate).getTime()) {
+        errors.push('Ngày bắt đầu phải nhỏ hơn ngày kết thúc!');
+    }
     if (errors.length > 0) {
         return res.status(400).json({
             success: false,
