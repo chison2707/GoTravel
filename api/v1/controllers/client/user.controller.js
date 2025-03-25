@@ -1,4 +1,5 @@
-const md5 = require('md5');
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
 const User = require("../../models/user.model");
 const ForgotPassword = require("../../models/forgot-password.model");
 const generateHelper = require("../../../../helper/generate");
@@ -7,7 +8,7 @@ const Cart = require('../../models/cart.model');
 
 // [POST]/api/v1/users/register
 module.exports.register = async (req, res) => {
-    req.body.password = md5(req.body.password);
+    const hashedPassword = await bcrypt.hash(req.body.password, saltRounds);
 
     const existEmail = await User.findOne({
         email: req.body.email,
@@ -23,7 +24,7 @@ module.exports.register = async (req, res) => {
         const user = new User({
             fullName: req.body.fullName,
             email: req.body.email,
-            password: req.body.password,
+            password: hashedPassword,
             token: generateHelper.generateRandomString(30),
             phone: req.body.phone,
             avatar: req.body.avatar
