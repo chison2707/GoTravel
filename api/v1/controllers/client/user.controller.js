@@ -168,19 +168,19 @@ module.exports.resetPassword = async (req, res) => {
     const user = await User.findOne({
         token: token
     });
-
-    if (md5(password) === user.password) {
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (isMatch) {
         res.json({
             code: 400,
             message: "Mật khẩu đã tồn tại"
         });
         return;
     }
-
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
     await User.updateOne({
         token: token
     }, {
-        password: md5(password)
+        password: hashedPassword
     });
 
     res.json({
