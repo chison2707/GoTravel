@@ -1,5 +1,6 @@
 const Account = require("../../models/account.model");
-const md5 = require("md5");
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
 const generate = require("../../../../helper/generate");
 const paginationHelper = require("../../../../helper/pagination");
 
@@ -48,10 +49,12 @@ module.exports.createPost = async (req, res) => {
             })
         }
 
+        const hashedPassword = await bcrypt.hash(req.body.password, saltRounds);
+
         const account = new Account({
             fullName: req.body.fullName,
             email: req.body.email,
-            password: md5(req.body.password),
+            password: hashedPassword,
             token: generate.generateRandomString(20),
             phone: req.body.phone,
             avatar: req.body.avatar,
@@ -89,8 +92,8 @@ module.exports.login = async (req, res) => {
         });
         return;
     }
-
-    if (md5(password) !== account.password) {
+    const isMatch = await bcrypt.compare(password, account.password);
+    if (!isMatch) {
         res.json({
             code: 400,
             message: "Sai mật khẩu!"
