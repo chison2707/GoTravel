@@ -147,7 +147,8 @@ module.exports.edit = async (req, res) => {
         });
     } else {
         if (req.body.password) {
-            req.body.password = md5(req.body.password);
+            const hashedPassword = await bcrypt.hash(req.body.password, saltRounds);
+            req.body.password = hashedPassword;
         } else {
             delete req.body.password;
         }
