@@ -19,6 +19,7 @@ const orderSchema = new mongoose.Schema({
             quantity: Number
         }
     ],
+    totalPrice: Number,
     updateBy: [
         {
             account_id: String,

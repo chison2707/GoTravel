@@ -1,53 +1,50 @@
 const Cart = require("../../models/cart.model");
 const Tour = require("../../models/tour.model");
 const Order = require("../../models/order.model");
+const Voucher = require("../../models/voucher.model");
 const tourHelper = require("../../../../helper/tours");
 
 //[GET] /checkout
 module.exports.index = async (req, res) => {
-    const userId = req.user._id;
+    try {
+        const userId = req.user._id;
 
-
-    const cart = await Cart.findOne({
-        user_id: userId
-    });
-
-    const processedCart = {
-        _id: cart._id,
-        user_id: cart.user_id,
-        tours: [],
-        totalPrice: 0
-    };
-
-    if (cart.tours.length > 0) {
-        for (const item of cart.tours) {
-            const tourId = item.tour_id;
-
-            const tourInfo = await Tour.findOne({
-                _id: tourId
-            });
-
-            if (tourInfo) {
-                const priceNew = tourHelper.priceNewTour(tourInfo);
-                const totalPrice = item.quantity * priceNew;
-
-                processedCart.tours.push({
-                    tour_id: tourId,
-                    quantity: item.quantity,
-                    tourInfo: tourInfo,
-                    priceNew: priceNew,
-                    totalPrice: totalPrice
-                });
-
-
-                processedCart.totalPrice += totalPrice;
-            }
-
+        const cart = await Cart.findOne({ user_id: userId }).lean();
+        if (!cart || !cart.tours.length) {
+            return res.json({ _id: null, user_id: userId, tours: [], totalPrice: 0 });
         }
-    }
 
-    res.json(processedCart);
-}
+        // Lấy danh sách tất cả tour trong giỏ hàng
+        const tourIds = cart.tours.map(item => item.tour_id);
+        const tours = await Tour.find({ _id: { $in: tourIds } }).lean();
+
+        let totalPrice = 0;
+        const processedTours = cart.tours.map(item => {
+            const tourInfo = tours.find(tour => tour._id.toString() === item.tour_id.toString());
+            if (!tourInfo) return null;
+
+            const priceNew = tourHelper.priceNewTour(tourInfo);
+            const total = item.quantity * priceNew;
+            totalPrice += total;
+
+            return {
+                tour_id: item.tour_id,
+                quantity: item.quantity,
+                tourInfo,
+                priceNew,
+                totalPrice: total
+            };
+        }).filter(item => item !== null);
+
+        res.json({
+            _id: cart._id,
+            tours: processedTours,
+            totalPrice
+        });
+    } catch (error) {
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+};
 
 //[POST] /checkout/order
 module.exports.order = async (req, res) => {
