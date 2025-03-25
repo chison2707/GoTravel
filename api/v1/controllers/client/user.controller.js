@@ -57,8 +57,9 @@ module.exports.login = async (req, res) => {
         });
         return;
     }
+    const isMatch = await bcrypt.compare(password, user.password);
 
-    if (md5(password) !== user.password) {
+    if (!isMatch) {
         res.json({
             code: 400,
             message: "Sai mật khẩu!"
