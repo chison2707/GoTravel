@@ -4,7 +4,7 @@ const Order = require("../../models/order.model");
 const Voucher = require("../../models/voucher.model");
 const tourHelper = require("../../../../helper/tours");
 
-//[GET] /checkout
+//[GET] api/v1/checkout
 module.exports.index = async (req, res) => {
     try {
         const userId = req.user._id;
@@ -46,7 +46,7 @@ module.exports.index = async (req, res) => {
     }
 };
 
-//[POST] /checkout/order
+//[POST] api/v1/checkout/order
 module.exports.order = async (req, res) => {
     const cartId = req.cart.id;
     const { fullName, phone, note, voucherCode } = req.body;
@@ -159,26 +159,72 @@ module.exports.order = async (req, res) => {
     });
 }
 
+//[POST] api/v1/checkout/payment/:orderId
+module.exports.createPayment = async (req, res) => {
+    try {
+        const orderId = req.params.orderId;
+        if (!orderId) {
+            return res.json({
+                error: "400",
+                message: "Thiếu orderId!"
+            });
+        }
 
-// [GET] /checkout/success/:id
-// module.exports.success = async (req, res) => {
-//     const order = await Order.findOne({
-//         _id: req.params.orderId
-//     });
+        const order = await Order.findById(orderId);
+        if (!order) {
+            return res.json({
+                error: "400",
+                message: "Không tìm thấy đơn hàng!"
+            });
+        }
 
-//     for (const tour of order.tours) {
-//         const tourInfo = await Tour.findOne({
-//             _id: tour.tour_id
-//         }).select("title images[0]");
+        const paymentUrl = vnpay.buildPaymentUrl({
+            amount: order.totalPrice * 100,
+            returnUrl: "http://localhost:3000/checkout/success",
+            orderId: order._id.toString(),
+            transactionId: `txn_${Date.now()}`,
+            orderInfo: "Thanh toán đơn hàng du lịch",
+            ipAddress: req.ip,
+            bankCode: "VNPAYQR",
+        });
 
-//         tour.tourInfo = tourInfo;
+        res.json({ paymentUrl });
+    } catch (error) {
+        console.error("Lỗi tạo thanh toán VNPay:", error);
+        res.json({
+            Error: "500",
+            message: "Lỗi hệ thống!"
+        });
+    }
+};
 
-//         tour.priceNew = tourHelper.priceNewTour(tour);
+// [GET] api/v1/checkout/success
+module.exports.paymentCallback = async (req, res) => {
+    try {
+        const query = req.query;
+        const isValid = vnpay.verifyReturnUrl(query);
 
-//         tour.totalPrice = tour.priceNew * tour.quantity;
+        if (!isValid) {
+            return res.json({
+                error: "400",
+                message: "Xác thực thanh toán thất bại!"
+            });
+        }
 
-//     }
-//     order.totalPrice = order.tours.reduce((sum, item) => sum + item.totalPrice, 0);
+        const orderId = query.vnp_TxnRef;
+        const paymentStatus = query.vnp_ResponseCode === "00";
 
-//     res.json(order);
-// }
+        if (paymentStatus) {
+            await Order.findByIdAndUpdate(orderId, { status: "paid" });
+            res.redirect(`http://localhost:3000/order-success`);
+        } else {
+            res.redirect(`http://localhost:3000/order-failed`);
+        }
+    } catch (error) {
+        console.error("Lỗi xử lý callback:", error);
+        res.json({
+            error: "500",
+            message: "Lỗi hệ thống!"
+        });
+    }
+};
