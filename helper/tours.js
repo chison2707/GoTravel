@@ -3,3 +3,12 @@ module.exports.priceNewTour = (tour) => {
 
     return priceNew;
 }
+
+module.exports.calculateDiscount = (totalPrice, voucher) => {
+    if (!voucher) return { discountAmount: 0, finalPrice: totalPrice };
+
+    const discountAmount = totalPrice * (voucher.discount / 100);
+    const finalPrice = totalPrice - discountAmount;
+
+    return { discountAmount, finalPrice };
+};

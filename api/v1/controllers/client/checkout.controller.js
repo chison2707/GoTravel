@@ -49,29 +49,45 @@ module.exports.index = async (req, res) => {
 //[POST] /checkout/order
 module.exports.order = async (req, res) => {
     const cartId = req.cart.id;
-    const userInfo = req.body;
+    const { fullName, phone, note, voucherCode } = req.body;
+
     const user_id = req.user.id;
 
     const cart = await Cart.findOne({
         _id: cartId
     });
-
+    if (!cart || cart.tours.length === 0) {
+        return res.json({
+            error: "400",
+            message: "Giỏ hàng trống!"
+        });
+    }
+    let totalPrice = 0;
+    let discountAmount = 0;
     let tours = [];
 
     for (const tour of cart.tours) {
-        const objTour = {
-            tour_id: tour.tour_id,
-            price: 0,
-            discount: 0,
-            quantity: tour.quantity
-        };
-
         const tourInfo = await Tour.findOne({
             _id: tour.tour_id
         });
 
-        objTour.price = tourInfo.price;
-        objTour.discount = tourInfo.discount;
+        if (!tourInfo) {
+            return res.json({
+                error: "400",
+                message: "Tour không tồn tại!"
+            });
+        }
+        const priceNew = tourHelper.priceNewTour(tourInfo);
+        const itemTotal = tour.quantity * priceNew;
+
+        tours.push({
+            tour_id: tour.tour_id,
+            price: tourInfo.price,
+            discount: tourInfo.discount,
+            quantity: tour.quantity
+        });
+        totalPrice += itemTotal;
+
         await Tour.updateOne(
             { _id: tour.tour_id },
             {
@@ -80,30 +96,69 @@ module.exports.order = async (req, res) => {
                     stock: -tour.quantity
                 }
             });
-        tours.push(objTour);
+    }
+    // Xử lý voucher nếu có
+    if (voucherCode) {
+        const voucher = await Voucher.findOne({
+            code: voucherCode,
+            deleted: false
+        });
+
+        if (voucher) {
+            if (new Date() > new Date(voucher.endDate)) {
+                return res.json({
+                    error: "400",
+                    message: "Voucher đã hết hạn!"
+                });
+            }
+
+            if (voucher.quantity <= 0) {
+                return res.json({
+                    error: "400",
+                    message: "Voucher đã hết số lượng!"
+                });
+            }
+
+            const discountData = tourHelper.calculateDiscount(totalPrice, voucher);
+            discountAmount = discountData.discountAmount;
+            totalPrice = discountData.finalPrice;
+
+
+            await Voucher.updateOne({
+                _id: voucher._id
+            }, {
+                $inc:
+                {
+                    quantity: -1
+                }
+            });
+        }
     }
 
-    const objOrder = {
+    const newOrder = new Order({
         user_id: user_id,
-        userInfor: userInfo,
-        tours: tours
-    };
+        userInfor: { fullName, phone, note },
+        status: "pending",
+        tours,
+        totalPrice,
+        updateBy: []
+    });
 
-    const order = new Order(objOrder);
-    const data = await order.save();
+    const savedOrder = await newOrder.save();
 
     await Cart.updateOne({
-        _id: cartId
+        _id: cart._id
     }, {
         tours: []
     });
 
     res.json({
-        code: 200,
-        message: "Đặt hàng thành công",
-        data: data
+        status: "200",
+        message: "Đặt hàng thành công!",
+        order: savedOrder
     });
 }
+
 
 // [GET] /checkout/success/:id
 // module.exports.success = async (req, res) => {
