@@ -77,3 +77,23 @@ module.exports.detail = async (req, res) => {
     }
     res.json(tours);
 };
+
+// [DELETE]/api/v1/admin/orders/delete/:id
+module.exports.delete = async (req, res) => {
+    try {
+        const id = req.params.id;
+        await Order.deleteOne({
+            _id: id
+        });
+
+        res.json({
+            code: 200,
+            message: "Xóa đơn hàng thành công!"
+        });
+    } catch (error) {
+        res.json({
+            code: 500,
+            message: "Lỗi" + error
+        });
+    }
+};
