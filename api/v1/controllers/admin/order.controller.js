@@ -1,5 +1,7 @@
 const Order = require("../../models/order.model");
 const paginationHelper = require("../../../../helper/pagination");
+const Tour = require("../../models/tour.model");
+const tourHelper = require("../../../../helper/tours");
 
 // [GET]/api/v1/admin/orders
 module.exports.index = async (req, res) => {
@@ -54,4 +56,24 @@ module.exports.changeStatus = async (req, res) => {
             message: "Có lỗi " + error
         });
     }
+};
+
+// [GET]/api/v1/admin/orders/detail/:id
+module.exports.detail = async (req, res) => {
+    const id = req.params.id;
+    const order = await Order.findOne({
+        _id: id
+    });
+    const tours = [];
+    for (const item of order.tours) {
+        const tourInfo = await Tour.findOne({
+            _id: item.tour_id
+        });
+        tours.push({
+            tourInfo: tourInfo,
+            quantity: item.quantity,
+            priceNew: tourHelper.priceNewTour(tourInfo)
+        });
+    }
+    res.json(tours);
 };
