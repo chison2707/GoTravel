@@ -31,3 +31,27 @@ module.exports.index = async (req, res) => {
 
     res.json(orders);
 };
+
+// [PATCH]/api/v1/admin/orders/changeStatus/:status/:id
+module.exports.changeStatus = async (req, res) => {
+    try {
+        const status = req.params.status;
+        const id = req.params.id;
+
+        await Order.updateOne({
+            _id: id
+        }, {
+            status: status
+        });
+
+        res.json({
+            code: 200,
+            message: "Cập nhật trạng thái thành công!"
+        });
+    } catch (error) {
+        res.json({
+            code: 500,
+            message: "Có lỗi " + error
+        });
+    }
+};
