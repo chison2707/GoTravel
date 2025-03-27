@@ -29,3 +29,9 @@ module.exports.generateTourCode = (number) => {
     const code = `TOUR${String(number).padStart(6, '0')}`;
     return code;
 };
+
+// generate mã order
+module.exports.generateOrderCode = (number) => {
+    const code = `ORD${String(number).padStart(6, '0')}`;
+    return code;
+};

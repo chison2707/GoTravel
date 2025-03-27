@@ -3,6 +3,7 @@ const Tour = require("../../models/tour.model");
 const Order = require("../../models/order.model");
 const Voucher = require("../../models/voucher.model");
 const tourHelper = require("../../../../helper/tours");
+const generate = require("../../../../helper/generate");
 
 //[GET] api/v1/checkout
 module.exports.index = async (req, res) => {
@@ -135,7 +136,10 @@ module.exports.order = async (req, res) => {
         }
     }
 
+    const countOrder = await Order.countDocuments();
+    const code = generate.generateOrderCode(countOrder + 1);
     const newOrder = new Order({
+        orderCode: code,
         user_id: user_id,
         userInfor: { fullName, phone, note },
         status: "pending",

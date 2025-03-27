@@ -6,12 +6,12 @@ const tourHelper = require("../../../../helper/tours");
 module.exports.addPost = async (req, res) => {
     const tourId = req.params.tour_id;
     const quantity = parseInt(req.body.quantity);
-    const cartId = req.cookies.cartId;
+    const cartId = req.cart.id;
 
     const cart = await Cart.findOne({
         _id: cartId
     });
-    const tour = await Tour.findOne({ _id: tourId })
+    const tour = await Tour.findOne({ _id: tourId });
     const existTourInCart = cart.tours.find(item => item.tour_id === tourId);
 
     if (existTourInCart) {
