@@ -13,12 +13,12 @@ module.exports.generalPatch = async (req, res) => {
             const record = new SettingGeneral(req.body);
             await record.save();
         }
-        res.josn({
+        res.json({
             code: 200,
             message: "Cập nhật thành công!",
         });
     } catch (error) {
-        res.josn({
+        res.json({
             code: 500,
             message: "Lỗi" + error
         });
