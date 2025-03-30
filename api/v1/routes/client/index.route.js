@@ -4,6 +4,7 @@ const categoryRoute = require("./category.route");
 const tourRoute = require("./tour.route");
 const cartRoute = require("./cart.route");
 const checkoutRoute = require("./checkout.route");
+const chatRoute = require("./chat.route");
 
 module.exports = (app) => {
 
@@ -15,4 +16,5 @@ module.exports = (app) => {
     app.use(version + '/tours', tourRoute);
     app.use(version + '/carts', cartRoute);
     app.use(version + '/checkout', checkoutRoute);
+    app.use(version + '/chats', chatRoute);
 }

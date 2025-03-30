@@ -5,7 +5,7 @@ const Tour = require("../../models/tour.model");
 module.exports.getChatResponse = async (req, res) => {
     try {
         const { message } = req.body;
-        const userId = req.user.id;
+        const userId = req.user._id;
 
         if (!message) {
             return res.status(400).json({ error: "Message is required" });
@@ -39,8 +39,9 @@ module.exports.getChatResponse = async (req, res) => {
             {
                 role: "system",
                 content: `Bạn là một trợ lý du lịch. Hôm nay là tháng ${month}/${year}. 
-                Hãy cung cấp thông tin hữu ích về các điểm du lịch, lịch trình và mẹo du lịch. 
-                Không đề cập đến bất kỳ thương hiệu hay website nào.\n${suggestedTours}`
+                Hãy cung cấp thông tin hữu ích về các điểm du lịch, 
+                lịch trình và mẹo du lịch chỉ những thông tin tôi cấp và không được đem những thông tin bên ngoài nhé.\n${suggestedTours}
+                Không đề cập đến bất kỳ thương hiệu hay website nào.`
             },
             ...chat.history,
         ];
