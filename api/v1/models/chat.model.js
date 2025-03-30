@@ -25,6 +25,13 @@ const chatSchema = new mongoose.Schema({
     ],
 });
 
+chatSchema.pre("save", function (next) {
+    if (this.history.length > 10) {
+        this.history = this.history.slice(-10);
+    }
+    next();
+});
+
 const Chat = mongoose.model("Chat", chatSchema);
 
 module.exports = Chat;
