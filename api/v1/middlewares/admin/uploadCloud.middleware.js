@@ -23,6 +23,5 @@ module.exports.uploadFields = async (req, res, next) => {
         }
         req.body[key] = links;
     }
-    console.log("FINAL BODY:", req.body);
     next();
 }
