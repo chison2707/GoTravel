@@ -2,6 +2,7 @@ const axios = require("axios");
 const Chat = require("../../models/chat.model");
 const Tour = require("../../models/tour.model");
 
+// [POST]/api/v1/chats
 module.exports.getChatResponse = async (req, res) => {
     try {
         const { message } = req.body;
@@ -72,3 +73,26 @@ module.exports.getChatResponse = async (req, res) => {
         res.status(500).json({ error: "Có lỗi xảy ra!" });
     }
 };
+
+// [PATCH]/api/v1/chats/clear
+module.exports.clearChat = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        await Chat.updateOne({
+            userId: userId
+        }, {
+            $set: {
+                history: []
+            }
+        });
+        res.json({
+            code: 200,
+            message: "Xóa lịch sử trò chuyện thành công!"
+        });
+    } catch (error) {
+        res.json({
+            code: 500,
+            message: error
+        });
+    }
+}
