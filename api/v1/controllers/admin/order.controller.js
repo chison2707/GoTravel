@@ -1,7 +1,7 @@
 const Order = require("../../models/order.model");
-const paginationHelper = require("../../../../helper/pagination");
+const paginationHelper = require("../../helper/pagination");
 const Tour = require("../../models/tour.model");
-const tourHelper = require("../../../../helper/tours");
+const tourHelper = require("../../helper/tours");
 
 // [GET]/api/v1/admin/orders
 module.exports.index = async (req, res) => {

@@ -2,8 +2,8 @@ const Cart = require("../../models/cart.model");
 const Tour = require("../../models/tour.model");
 const Order = require("../../models/order.model");
 const Voucher = require("../../models/voucher.model");
-const tourHelper = require("../../../../helper/tours");
-const generate = require("../../../../helper/generate");
+const tourHelper = require("../../helper/tours");
+const generate = require("../../helper/generate");
 
 //[GET] api/v1/checkout
 module.exports.index = async (req, res) => {

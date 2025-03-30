@@ -1,6 +1,6 @@
 const Cart = require("../../models/cart.model");
 const Tour = require("../../models/tour.model");
-const tourHelper = require("../../../../helper/tours");
+const tourHelper = require("../../helper/tours");
 
 // [POST] /api/v1/carts/add/:tour_id
 module.exports.addPost = async (req, res) => {

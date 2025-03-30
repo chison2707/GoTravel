@@ -1,5 +1,5 @@
 const Role = require("../../models/role.model");
-const paginationHelper = require("../../../../helper/pagination");
+const paginationHelper = require("../../helper/pagination");
 
 // [GET]/api/v1/admin/roles
 module.exports.index = async (req, res) => {

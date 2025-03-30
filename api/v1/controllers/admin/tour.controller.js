@@ -1,8 +1,8 @@
 const Tour = require("../../models/tour.model");
 const Category = require("../../models/category.model");
-const generate = require("../../../../helper/generate");
-const paginationHelper = require("../../../../helper/pagination");
-const tourHelper = require("../../../../helper/tours");
+const generate = require("../../helper/generate");
+const paginationHelper = require("../../helper/pagination");
+const tourHelper = require("../../helper/tours");
 
 // [GET]/api/v1/admin/tours
 module.exports.index = async (req, res) => {

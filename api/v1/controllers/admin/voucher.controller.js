@@ -1,5 +1,5 @@
 const Voucher = require("../../models/voucher.model");
-const paginationHelper = require("../../../../helper/pagination");
+const paginationHelper = require("../../helper/pagination");
 
 // [GET]/api/v1/admin/vouchers
 module.exports.index = async (req, res) => {

@@ -1,5 +1,5 @@
 const Category = require("../../models/category.model");
-const paginationHelper = require("../../../../helper/pagination");
+const paginationHelper = require("../../helper/pagination");
 
 // [GET]/api/v1/admin/categories
 module.exports.index = async (req, res) => {

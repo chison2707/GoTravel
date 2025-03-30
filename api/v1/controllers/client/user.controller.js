@@ -2,8 +2,8 @@ const bcrypt = require('bcrypt');
 const saltRounds = 10;
 const User = require("../../models/user.model");
 const ForgotPassword = require("../../models/forgot-password.model");
-const generateHelper = require("../../../../helper/generate");
-const sendMailHelper = require("../../../../helper/sendMail");
+const generateHelper = require("../../helper/generate");
+const sendMailHelper = require("../../helper/sendMail");
 const Cart = require('../../models/cart.model');
 
 // [POST]/api/v1/users/register
