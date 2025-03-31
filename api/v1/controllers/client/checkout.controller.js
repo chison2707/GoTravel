@@ -6,6 +6,8 @@ const tourHelper = require("../../helper/tours");
 const generate = require("../../helper/generate");
 const vnpay = require('../../../../config/vnpay');
 const moment = require("moment");
+const { VerifyReturnUrl } = require('vnpay');
+
 
 //[GET] api/v1/checkout
 module.exports.index = async (req, res) => {
@@ -189,11 +191,11 @@ module.exports.createPayment = async (req, res) => {
 
         const paymentUrl = vnpay.buildPaymentUrl({
             vnp_Amount: order.totalPrice,
-            vnp_IpAddr: '13.160.92.202',
+            vnp_IpAddr: req.ip || "127.0.0.1",
             vnp_TxnRef: order.orderCode,
             vnp_OrderInfo: 'Thanh toan don hang ' + order._id,
             vnp_OrderType: "other",
-            vnp_ReturnUrl: "http://localhost:3000/checkout/success",
+            vnp_ReturnUrl: "http://localhost:3000/api/v1/checkout/success",
             vnp_Locale: "vn",
             vnp_CreateDate: now.format("YYYYMMDDHHmmss"),
             vnp_ExpireDate: expire.format("YYYYMMDDHHmmss"),
@@ -210,48 +212,40 @@ module.exports.createPayment = async (req, res) => {
 };
 
 // [GET] api/v1/checkout/success
-// module.exports.paymentCallback = async (req, res) => {
-//     try {
-//         // Lấy toàn bộ tham số từ query
-//         const vnp_Params = req.query;
+module.exports.paymentCallback = async (req, res) => {
+    let verify;
+    try {
+        verify = vnpay.verifyReturnUrl(req.query);
+        if (!verify.isVerified) {
+            return res.json({
+                code: 400,
+                message: 'Xác thực tính toàn vẹn dữ liệu thất bại'
+            });
+        }
+        if (!verify.isSuccess) {
+            return res.json({
+                code: 400,
+                message: 'Đơn hàng thanh toán thất bại'
+            });
+        }
+    } catch (error) {
+        return res.json({
+            code: 500,
+            message: 'Dữ liệu không hợp lệ'
+        });
+    }
 
-//         // Lưu lại vnp_SecureHash để xác minh
-//         const secureHash = vnp_Params["vnp_SecureHash"];
-//         delete vnp_Params["vnp_SecureHash"];
+    // Kiểm tra thông tin đơn hàng và xử lý tương ứng
+    const orderCode = verify.vnp_TxnRef;
+    const order = await Order.findOneAndUpdate(
+        { orderCode: orderCode },
+        { status: "paid", paymentInfo: verify },
+        { new: true }
+    );
 
-//         // Sắp xếp lại tham số theo thứ tự alphabet để tạo chuỗi hash
-//         const sortedParams = Object.keys(vnp_Params).sort().map(key => `${key}=${vnp_Params[key]}`).join("&");
-
-//         // Tạo hash để so sánh với vnp_SecureHash
-//         const hash = crypto.createHmac("sha512", secretKey).update(sortedParams).digest("hex");
-
-//         // Kiểm tra chữ ký có hợp lệ không
-//         if (hash !== secureHash) {
-//             return res.status(400).json({ message: "Chữ ký không hợp lệ!" });
-//         }
-
-//         // Kiểm tra trạng thái giao dịch
-//         if (vnp_Params["vnp_ResponseCode"] === "00" && vnp_Params["vnp_TransactionStatus"] === "00") {
-//             const orderId = vnp_Params["vnp_TxnRef"]; // Mã đơn hàng
-//             const amount = parseInt(vnp_Params["vnp_Amount"]) / 100; // Chuyển từ VND về đúng giá trị
-
-//             // Cập nhật trạng thái đơn hàng trong database
-//             const order = await Order.findOneAndUpdate(
-//                 { orderId },
-//                 { status: "paid", paymentInfo: vnp_Params },
-//                 { new: true }
-//             );
-
-//             if (!order) {
-//                 return res.status(404).json({ message: "Không tìm thấy đơn hàng!" });
-//             }
-
-//             return res.json({ message: "Thanh toán thành công!", order });
-//         } else {
-//             return res.status(400).json({ message: "Giao dịch không thành công!" });
-//         }
-//     } catch (error) {
-//         console.error("Lỗi xử lý thanh toán:", error);
-//         return res.status(500).json({ message: "Lỗi server!" });
-//     }
-// };
+    return res.json({
+        code: 200,
+        message: 'Thanh toán thành công',
+        order: order
+    });
+};
