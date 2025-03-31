@@ -4,6 +4,8 @@ const Order = require("../../models/order.model");
 const Voucher = require("../../models/voucher.model");
 const tourHelper = require("../../helper/tours");
 const generate = require("../../helper/generate");
+const vnpay = require('../../../../config/vnpay');
+const moment = require("moment");
 
 //[GET] api/v1/checkout
 module.exports.index = async (req, res) => {
@@ -182,14 +184,19 @@ module.exports.createPayment = async (req, res) => {
             });
         }
 
+        const now = moment();
+        const expire = now.clone().add(15, "minutes");
+
         const paymentUrl = vnpay.buildPaymentUrl({
-            amount: order.totalPrice * 100,
-            returnUrl: "http://localhost:3000/checkout/success",
-            orderId: order._id.toString(),
-            transactionId: `txn_${Date.now()}`,
-            orderInfo: "Thanh toán đơn hàng du lịch",
-            ipAddress: req.ip,
-            bankCode: "VNPAYQR",
+            vnp_Amount: order.totalPrice,
+            vnp_IpAddr: '13.160.92.202',
+            vnp_TxnRef: order.orderCode,
+            vnp_OrderInfo: 'Thanh toan don hang ' + order._id,
+            vnp_OrderType: "other",
+            vnp_ReturnUrl: "http://localhost:3000/checkout/success",
+            vnp_Locale: "vn",
+            vnp_CreateDate: now.format("YYYYMMDDHHmmss"),
+            vnp_ExpireDate: expire.format("YYYYMMDDHHmmss"),
         });
 
         res.json({ paymentUrl });
@@ -203,32 +210,48 @@ module.exports.createPayment = async (req, res) => {
 };
 
 // [GET] api/v1/checkout/success
-module.exports.paymentCallback = async (req, res) => {
-    try {
-        const query = req.query;
-        const isValid = vnpay.verifyReturnUrl(query);
+// module.exports.paymentCallback = async (req, res) => {
+//     try {
+//         // Lấy toàn bộ tham số từ query
+//         const vnp_Params = req.query;
 
-        if (!isValid) {
-            return res.json({
-                error: "400",
-                message: "Xác thực thanh toán thất bại!"
-            });
-        }
+//         // Lưu lại vnp_SecureHash để xác minh
+//         const secureHash = vnp_Params["vnp_SecureHash"];
+//         delete vnp_Params["vnp_SecureHash"];
 
-        const orderId = query.vnp_TxnRef;
-        const paymentStatus = query.vnp_ResponseCode === "00";
+//         // Sắp xếp lại tham số theo thứ tự alphabet để tạo chuỗi hash
+//         const sortedParams = Object.keys(vnp_Params).sort().map(key => `${key}=${vnp_Params[key]}`).join("&");
 
-        if (paymentStatus) {
-            await Order.findByIdAndUpdate(orderId, { status: "paid" });
-            res.redirect(`http://localhost:3000/order-success`);
-        } else {
-            res.redirect(`http://localhost:3000/order-failed`);
-        }
-    } catch (error) {
-        console.error("Lỗi xử lý callback:", error);
-        res.json({
-            error: "500",
-            message: "Lỗi hệ thống!"
-        });
-    }
-};
+//         // Tạo hash để so sánh với vnp_SecureHash
+//         const hash = crypto.createHmac("sha512", secretKey).update(sortedParams).digest("hex");
+
+//         // Kiểm tra chữ ký có hợp lệ không
+//         if (hash !== secureHash) {
+//             return res.status(400).json({ message: "Chữ ký không hợp lệ!" });
+//         }
+
+//         // Kiểm tra trạng thái giao dịch
+//         if (vnp_Params["vnp_ResponseCode"] === "00" && vnp_Params["vnp_TransactionStatus"] === "00") {
+//             const orderId = vnp_Params["vnp_TxnRef"]; // Mã đơn hàng
+//             const amount = parseInt(vnp_Params["vnp_Amount"]) / 100; // Chuyển từ VND về đúng giá trị
+
+//             // Cập nhật trạng thái đơn hàng trong database
+//             const order = await Order.findOneAndUpdate(
+//                 { orderId },
+//                 { status: "paid", paymentInfo: vnp_Params },
+//                 { new: true }
+//             );
+
+//             if (!order) {
+//                 return res.status(404).json({ message: "Không tìm thấy đơn hàng!" });
+//             }
+
+//             return res.json({ message: "Thanh toán thành công!", order });
+//         } else {
+//             return res.status(400).json({ message: "Giao dịch không thành công!" });
+//         }
+//     } catch (error) {
+//         console.error("Lỗi xử lý thanh toán:", error);
+//         return res.status(500).json({ message: "Lỗi server!" });
+//     }
+// };

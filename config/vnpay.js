@@ -1,4 +1,4 @@
-import { VNPay, ignoreLogger } from 'vnpay';
+const { VNPay, ignoreLogger } = require("vnpay");
 
 const vnpay = new VNPay({
     // Thông tin cấu hình bắt buộc
@@ -12,4 +12,4 @@ const vnpay = new VNPay({
     enableLog: true,
     loggerFn: ignoreLogger,
 });
-export default vnpay;
+module.exports = vnpay;
