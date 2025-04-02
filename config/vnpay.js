@@ -2,9 +2,9 @@ const { VNPay, ignoreLogger } = require("vnpay");
 
 const vnpay = new VNPay({
     // Thông tin cấu hình bắt buộc
-    tmnCode: 'M5UIQKTP',
-    secureSecret: 'GJGLD64LCT6X3SDKH8LD7PTYW638TR39',
-    vnpayHost: 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html',
+    tmnCode: process.env.vnp_TmnCode,
+    secureSecret: process.env.vnp_HashSecret,
+    vnpayHost: process.env.vnpayHost,
 
     // Cấu hình tùy chọn
     testMode: true,
