@@ -125,13 +125,21 @@ module.exports.editHotel = async (req, res) => {
     } else {
         try {
             const hotelId = req.params.hotelId;
-            await Hotel.updateOne({
-                _id: hotelId,
-                deleted: false
-            }, req.body);
+            const updatedHotel = await Hotel.findOneAndUpdate(
+                { _id: hotelId, deleted: false },
+                req.body,
+                { new: true }
+            );
+            if (!updatedHotel) {
+                return res.json({
+                    code: 404,
+                    message: "Khách sạn không tồn tại hoặc đã bị xoá"
+                });
+            }
             res.json({
                 code: 200,
-                message: "Cập nhật thành công"
+                message: "Cập nhật thành công",
+                data: updatedHotel
             });
         } catch (error) {
             res.json({
