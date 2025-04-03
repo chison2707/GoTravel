@@ -4,11 +4,8 @@ const slug = require('mongoose-slug-updater');
 mongoose.plugin(slug);
 const HotelSchema = new mongoose.Schema({
     name: String,
+    description: String,
     images: Array,
-    price: Number,
-    discount: Number,
-    amenities: String,
-    availableRooms: Number,
     location: {
         city: String,
         country: String,
