@@ -1,6 +1,31 @@
 const Hotel = require("../../models/hotel.model");
 const Room = require("../../models/room.model");
 
+// [POST]/api/v1/admin/hotels
+module.exports.index = async (req, res) => {
+    const permissions = req.roles.permissions;
+    if (!permissions.includes("hotel_view")) {
+        return res.json({
+            code: 400,
+            message: "Bạn không có quyền xem danh sách khách sạn"
+        });
+    } else {
+        try {
+            const hotels = await Hotel.find({ deleted: false });
+            res.json({
+                code: 200,
+                message: "Danh sách khách sạn",
+                data: hotels
+            });
+        } catch (error) {
+            res.json({
+                code: 500,
+                message: "Error: " + error
+            });
+        }
+    }
+}
+
 // [POST]/api/v1/admin/hotels/create
 module.exports.createPost = async (req, res) => {
     const permissions = req.roles.permissions;
