@@ -1,7 +1,7 @@
 const Hotel = require("../../models/hotel.model");
 const Room = require("../../models/room.model");
 
-// [POST]/api/v1/admin/hotels
+// [GET]/api/v1/admin/hotels
 module.exports.index = async (req, res) => {
     const permissions = req.roles.permissions;
     if (!permissions.includes("hotel_view")) {
@@ -16,6 +16,34 @@ module.exports.index = async (req, res) => {
                 code: 200,
                 message: "Danh sách khách sạn",
                 data: hotels
+            });
+        } catch (error) {
+            res.json({
+                code: 500,
+                message: "Error: " + error
+            });
+        }
+    }
+}
+
+// [GET]/api/v1/admin/hotels/:hotelId
+module.exports.indexRoom = async (req, res) => {
+    const permissions = req.roles.permissions;
+    if (!permissions.includes("hotel_view")) {
+        return res.json({
+            code: 400,
+            message: "Bạn không có quyền xem danh sách room của khách sạn"
+        });
+    } else {
+        try {
+            const hotelId = req.params.hotelId;
+            const room = await Room.find({
+                hotel_id: hotelId
+            });
+            res.json({
+                code: 200,
+                message: "Danh sách khách sạn",
+                data: room
             });
         } catch (error) {
             res.json({

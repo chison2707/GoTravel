@@ -8,6 +8,7 @@ const validate = require("../../validates/admin/hotel.validate");
 const upload = multer();
 
 router.get("/", controller.index);
+router.get("/:hotelId", controller.indexRoom);
 router.post('/create',
     upload.fields([{ name: 'images', maxCount: 10 }]),
     uploadCloud.uploadFields,
