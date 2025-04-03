@@ -14,4 +14,10 @@ router.post('/create',
     validate.hotelValidate,
     controller.createPost
 );
+router.post('/create/:hotelId',
+    upload.fields([{ name: 'images', maxCount: 10 }]),
+    uploadCloud.uploadFields,
+    validate.roomValidate,
+    controller.createPostRoom
+);
 module.exports = router;

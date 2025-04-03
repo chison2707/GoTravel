@@ -21,7 +21,7 @@ const HotelSchema = new mongoose.Schema({
     },
     slug: {
         type: String,
-        slug: "title",
+        slug: "name",
         unique: true
     },
     deleted: {
