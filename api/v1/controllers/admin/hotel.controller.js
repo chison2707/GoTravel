@@ -42,7 +42,7 @@ module.exports.indexRoom = async (req, res) => {
             });
             res.json({
                 code: 200,
-                message: "Danh sách khách sạn",
+                message: "Danh sách room của khách sạn",
                 data: room
             });
         } catch (error) {
@@ -104,6 +104,34 @@ module.exports.createPostRoom = async (req, res) => {
                 code: 200,
                 message: "Tạo thành công",
                 data: data
+            });
+        } catch (error) {
+            res.json({
+                code: 500,
+                message: "Error:" + error
+            });
+        }
+    }
+};
+
+// [PATCH]/api/v1/admin/hotels/edit/:hotelId
+module.exports.editHotel = async (req, res) => {
+    const permissions = req.roles.permissions;
+    if (!permissions.includes("hotel_edit")) {
+        return res.json({
+            code: 400,
+            message: "Bạn không có quyền chỉnh sửa khách sạn"
+        });
+    } else {
+        try {
+            const hotelId = req.params.hotelId;
+            await Hotel.updateOne({
+                _id: hotelId,
+                deleted: false
+            }, req.body);
+            res.json({
+                code: 200,
+                message: "Cập nhật thành công"
             });
         } catch (error) {
             res.json({

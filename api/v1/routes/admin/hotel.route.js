@@ -21,4 +21,9 @@ router.post('/create/:hotelId',
     validate.roomValidate,
     controller.createPostRoom
 );
+router.patch('/edit/:hotelId',
+    upload.fields([{ name: 'images', maxCount: 10 }]),
+    uploadCloud.uploadFields,
+    controller.editHotel
+);
 module.exports = router;
