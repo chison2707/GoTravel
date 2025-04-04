@@ -33,4 +33,5 @@ router.patch('/edit/:hotelId/:roomId',
 );
 
 router.patch("/changeStatus/:status/:hotelId", controller.changeStatus);
+router.patch("/changeStatus/:status/:hotelId/:roomId", controller.changeStatusRoom);
 module.exports = router;

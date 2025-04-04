@@ -252,3 +252,48 @@ module.exports.changeStatus = async (req, res) => {
         }
     }
 };
+
+// [PATCH]/api/v1/admin/hotels/changeStatus/:status/:hotelId/:roomId
+module.exports.changeStatusRoom = async (req, res) => {
+    const permissions = req.roles.permissions;
+    if (!permissions.includes("hotel_edit")) {
+        return res.json({
+            code: 400,
+            message: "Bạn không có quyền cập nhật trạng thái room khách sạn"
+        });
+    } else {
+        try {
+            const hotelId = req.params.hotelId;
+            const roomId = req.params.roomId;
+            const status = req.params.status;
+            const statusRoom = await Room.findOneAndUpdate(
+                {
+                    _id: roomId,
+                    hotel_id: hotelId
+                }
+                ,
+                {
+                    status: status
+                },
+                { new: true }
+            );
+
+            if (!statusRoom) {
+                return res.json({
+                    code: 404,
+                    message: "Room không tồn tại hoặc đã bị xoá"
+                });
+            }
+            res.json({
+                code: 200,
+                message: "Cập nhật thành công",
+                statusRoom: statusRoom
+            });
+        } catch (error) {
+            res.json({
+                code: 500,
+                message: "Error:" + error
+            });
+        }
+    }
+};
