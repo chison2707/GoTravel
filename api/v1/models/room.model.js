@@ -9,7 +9,11 @@ const RoomSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
-    images: Array
+    images: Array,
+    status: {
+        type: String,
+        default: "active"
+    },
 });
 
 const Room = mongoose.model('Room', RoomSchema, "rooms");

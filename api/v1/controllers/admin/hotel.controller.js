@@ -174,13 +174,75 @@ module.exports.editRoom = async (req, res) => {
             if (!updatedRoom) {
                 return res.json({
                     code: 404,
-                    message: "Khách sạn không tồn tại hoặc đã bị xoá"
+                    message: "Room không tồn tại hoặc đã bị xoá"
                 });
             }
             res.json({
                 code: 200,
                 message: "Cập nhật thành công",
                 data: updatedRoom
+            });
+        } catch (error) {
+            res.json({
+                code: 500,
+                message: "Error:" + error
+            });
+        }
+    }
+};
+
+// [PATCH]/api/v1/admin/hotels/changeStatus/:status/:hotelId
+module.exports.changeStatus = async (req, res) => {
+    const permissions = req.roles.permissions;
+    if (!permissions.includes("hotel_edit")) {
+        return res.json({
+            code: 400,
+            message: "Bạn không có quyền cập nhật trạng thái khách sạn"
+        });
+    } else {
+        try {
+            const hotelId = req.params.hotelId;
+            const status = req.params.status;
+            const statusHotel = await Hotel.findOneAndUpdate(
+                {
+                    _id: hotelId,
+                    deleted: false
+                }
+                ,
+                {
+                    status: status
+                },
+                { new: true }
+            );
+
+            const statusRoom = await Room.updateMany(
+                {
+                    hotel_id: hotelId
+                }
+                ,
+                {
+                    status: status
+                },
+                { new: true }
+            );
+            if (!statusHotel) {
+                return res.json({
+                    code: 404,
+                    message: "Khách sạn không tồn tại hoặc đã bị xoá"
+                });
+            }
+
+            if (!statusRoom) {
+                return res.json({
+                    code: 404,
+                    message: "Room không tồn tại hoặc đã bị xoá"
+                });
+            }
+            res.json({
+                code: 200,
+                message: "Cập nhật thành công",
+                statusHotel: statusHotel,
+                statusRoom: statusRoom
             });
         } catch (error) {
             res.json({

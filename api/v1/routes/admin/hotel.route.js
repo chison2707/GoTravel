@@ -31,4 +31,6 @@ router.patch('/edit/:hotelId/:roomId',
     uploadCloud.uploadFields,
     controller.editRoom
 );
+
+router.patch("/changeStatus/:status/:hotelId", controller.changeStatus);
 module.exports = router;
