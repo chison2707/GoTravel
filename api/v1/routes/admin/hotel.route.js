@@ -35,4 +35,5 @@ router.patch('/edit/:hotelId/:roomId',
 router.patch("/changeStatus/:status/:hotelId", controller.changeStatus);
 router.patch("/changeStatus/:status/:hotelId/:roomId", controller.changeStatusRoom);
 router.delete("/delete/:hotelId", controller.deleteHotel);
+router.delete("/delete/:hotelId/:roomId", controller.deleteRoom);
 module.exports = router;
