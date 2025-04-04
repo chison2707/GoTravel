@@ -297,3 +297,52 @@ module.exports.changeStatusRoom = async (req, res) => {
         }
     }
 };
+
+// [DELETE]/api/v1/admin/hotels/delete/:hotelId
+module.exports.deleteHotel = async (req, res) => {
+    const permissions = req.roles.permissions;
+    if (!permissions.includes("hotel_delete")) {
+        return res.json({
+            code: 400,
+            message: "Bạn không có quyền xóa khách sạn"
+        });
+    } else {
+        try {
+            const hotelId = req.params.hotelId;
+            const dataRoom = await Room.findOneAndDelete(
+                {
+                    hotel_id: hotelId
+                });
+
+            const dataHotel = await Hotel.findOneAndDelete(
+                {
+                    _id: hotelId,
+                    deleted: false
+                });
+            if (!dataRoom) {
+                return res.json({
+                    code: 404,
+                    message: "Room không tồn tại hoặc đã bị xoá"
+                });
+            }
+
+            if (!dataHotel) {
+                return res.json({
+                    code: 404,
+                    message: "khách sạn không tồn tại hoặc đã bị xoá"
+                });
+            }
+            res.json({
+                code: 200,
+                message: "Xóa thành công",
+                dataRoom: dataRoom,
+                dataHotel: dataHotel
+            });
+        } catch (error) {
+            res.json({
+                code: 500,
+                message: "Error:" + error
+            });
+        }
+    }
+};
