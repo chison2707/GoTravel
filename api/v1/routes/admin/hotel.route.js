@@ -26,4 +26,9 @@ router.patch('/edit/:hotelId',
     uploadCloud.uploadFields,
     controller.editHotel
 );
+router.patch('/edit/:hotelId/:roomId',
+    upload.fields([{ name: 'images', maxCount: 10 }]),
+    uploadCloud.uploadFields,
+    controller.editRoom
+);
 module.exports = router;
