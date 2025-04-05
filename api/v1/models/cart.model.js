@@ -7,7 +7,14 @@ const cartSchema = new mongoose.Schema({
             tour_id: String,
             quantity: Number
         }
-    ]
+    ],
+    hotels: [
+        {
+            hotel_id: String,
+            room_id: String,
+            quantity: Number
+        }
+    ],
 }, {
     timestamps: true
 });

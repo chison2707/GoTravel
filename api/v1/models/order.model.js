@@ -20,6 +20,15 @@ const orderSchema = new mongoose.Schema({
             quantity: Number
         }
     ],
+    hotels: [
+        {
+            hotel_id: String,
+            room_id: String,
+            price: Number,
+            discount: Number,
+            quantity: Number
+        }
+    ],
     totalPrice: Number,
     updateBy: [
         {
@@ -27,15 +36,7 @@ const orderSchema = new mongoose.Schema({
             updatedAt: Date
         }
     ],
-    paymentInfo: Object, // Lưu toàn bộ dữ liệu VNPay
-    paymentStatus: {
-        type: String,
-        enum: ["pending", "paid", "failed"],
-        default: "pending"
-    },
-    transactionNo: String, // Mã giao dịch VNPay
-    paymentMethod: String, // ATM, Credit Card, QR Code
-    paidAt: Date // Thời gian thanh toán thành công
+    paymentInfo: Object,
 }, {
     timestamps: true
 });
