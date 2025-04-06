@@ -11,8 +11,12 @@ const cartSchema = new mongoose.Schema({
     hotels: [
         {
             hotel_id: String,
-            room_id: String,
-            quantity: Number
+            rooms: [
+                {
+                    room_id: String,
+                    quantity: Number
+                }
+            ],
         }
     ],
 }, {
