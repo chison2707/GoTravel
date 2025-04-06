@@ -82,45 +82,72 @@ module.exports.addPostHotel = async (req, res) => {
     const cart = await Cart.findOne({
         _id: cartId
     });
-    const hotel = await Hotel.findOne({ _id: hotelId });
-    const room = await Room.findOne({ _id: roomId });
-    const existHotelInCart = cart.hotels.find(item => item.hotel_id === hotelId && item.room_id === roomId);
 
-    if (existHotelInCart) {
-        const quantityNew = quantity + existHotelInCart.quantity;
-        if (quantityNew > room.availableRooms) {
-            return res.json({
-                code: 400,
-                message: "Số lượng phòng trong giỏ hàng vượt quá số lượng phòng đang trống"
+    const room = await Room.findById(roomId);
+    if (!room) {
+        return res.json({
+            code: 400,
+            message: "Phòng không tồn tại"
+        });
+    }
+
+    const hotelInCart = cart.hotels.find(hotel => hotel.hotel_id === hotelId);
+
+    if (hotelInCart) {
+        const roomInHotel = hotelInCart.rooms.find(room => room.room_id === roomId);
+
+        if (!roomInHotel) {
+            const quantityNew = quantity + roomInHotel.quantity;
+            if (quantityNew > room.availableRooms) {
+                return res.json({
+                    code: 400,
+                    message: "Số lượng phòng trong giỏ hàng vượt quá số lượng phòng đang trống"
+                });
+            }
+
+            const data = await Cart.findOneAndUpdate(
+                {
+                    _id: cartId,
+                    "hotels.hotel_id": hotelId,
+                    "hotels.rooms.room_id": roomId
+                },
+                {
+                    $set: {
+                        "hotels.$[hotel].rooms.$[room].quantity": quantityNew
+                    }
+                },
+                {
+                    arrayFilters: [
+                        { "hotel.hotel_id": hotelId },
+                        { "room.room_id": roomId }
+                    ],
+                    new: true
+                }
+            );
+            res.json({
+                code: 200,
+                message: "Thêm giỏ hàng thành công",
+                data: data
             });
         }
-        const data = await Cart.findOneAndUpdate({
-            _id: cartId,
-            "hotels.hotel_id": hotelId,
-            "hotels.room_id": roomId
-        }, {
-            $set: {
-                "hotels.$.quantity": quantityNew
-            }
-        }, { new: true });
-        res.json({
-            code: 200,
-            message: "Thêm giỏ hàng thành công",
-            data: data
-        });
+
     } else {
-        const objectCart = {
-            hotel_id: hotelId,
-            room_id: roomId,
-            quantity: quantity
-        }
         const data = await Cart.findOneAndUpdate(
+            { _id: cartId },
             {
-                _id: cartId
+                $push: {
+                    hotels: {
+                        hotel_id: hotelId,
+                        rooms: [
+                            {
+                                room_id: roomId,
+                                quantity: quantity
+                            }
+                        ]
+                    }
+                }
             },
-            {
-                $push: { hotels: objectCart }
-            }, { new: true }
+            { new: true }
         );
         res.json({
             code: 200,
@@ -202,7 +229,7 @@ module.exports.index = async (req, res) => {
     res.json(processedCart);
 }
 
-// // [PATCH] /api/v1/carts/delete/:tour_id
+// [PATCH] /api/v1/carts/delete/:tour_id
 module.exports.delete = async (req, res) => {
     const cartId = req.cart.id;
     const tourId = req.params.tour_id;
@@ -211,6 +238,31 @@ module.exports.delete = async (req, res) => {
         _id: cartId
     }, {
         "$pull": { tours: { "tour_id": tourId } }
+    }, { new: true });
+
+    res.json({
+        code: 200,
+        message: "Xóa tour khỏi giỏ hàng thành công",
+        data: data
+    });
+
+}
+
+// [PATCH] /api/v1/carts/delete/:hotel_id/:room_id
+module.exports.deleteHotel = async (req, res) => {
+    const cartId = req.cart.id;
+    const hotelId = req.params.hotel_id;
+    const roomId = req.params.room_id;
+
+    const data = await Cart.findOneAndUpdate({
+        _id: cartId
+    }, {
+        "$pull": {
+            hotels: {
+                "hotel_id": hotelId,
+                "room_id": roomId
+            }
+        }
     }, { new: true });
 
     res.json({
