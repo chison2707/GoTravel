@@ -204,17 +204,21 @@ module.exports.index = async (req, res) => {
 
     // Xử lý hotel
     if (cart.hotels.length > 0) {
-        for (const item of cart.hotels) {
-            const hotelInfo = await Hotel.findById(item.hotel_id);
-            const roomInfo = await Room.findById(item.room_id);
+        for (const hotelItem of cart.hotels) {
+            const hotelInfo = await Hotel.findById(hotelItem.hotel_id);
+            // const roomInfo = await Room.findById(item.room_id);
+            if (!hotelInfo) continue;
 
-            if (hotelInfo && roomInfo) {
-                const total = item.quantity * roomInfo.price;
+            for (const roomItem of hotelItem.rooms) {
+                const roomInfo = await Room.findById(roomItem.room_id);
+                if (!roomInfo) continue;
+
+                const total = roomItem.quantity * roomInfo.price;
 
                 processedCart.hotels.push({
-                    hotel_id: item.hotel_id,
-                    room_id: item.room_id,
-                    quantity: item.quantity,
+                    hotel_id: hotelItem.hotel_id,
+                    room_id: roomItem.room_id,
+                    quantity: roomItem.quantity,
                     hotelInfo,
                     roomInfo,
                     price: roomInfo.price,
