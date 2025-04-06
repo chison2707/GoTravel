@@ -31,32 +31,38 @@ module.exports.addPost = async (req, res) => {
                 message: "Số lượng tour trong giỏ hàng vượt quá số lượng tour đang có"
             });
         }
-        await Cart.updateOne({
+        const data = await Cart.findOneAndUpdate({
             _id: cartId,
             "tours.tour_id": tourId
         }, {
             $set: {
                 "tours.$.quantity": quantityNew
             }
-        })
+        }, { new: true });
+        res.json({
+            code: 200,
+            message: "Thêm giỏ hàng thành công",
+            data: data
+        });
     } else {
         const objectCart = {
             tour_id: tourId,
             quantity: quantity
         }
-        await Cart.updateOne(
+        const data = await Cart.findOneAndUpdate(
             {
                 _id: cartId
             },
             {
                 $push: { tours: objectCart }
-            }
+            }, { new: true }
         );
+        res.json({
+            code: 200,
+            message: "Thêm giỏ hàng thành công",
+            data: data
+        });
     }
-    res.json({
-        code: 200,
-        message: "Thêm giỏ hàng thành công",
-    });
 }
 
 // [POST] /api/v1/carts/add/:hotel_id/:room_id
@@ -138,6 +144,7 @@ module.exports.index = async (req, res) => {
         _id: cart._id,
         user_id: cart.user_id,
         tours: [],
+        hotels: [],
         totalPrice: 0
     };
 
@@ -165,6 +172,30 @@ module.exports.index = async (req, res) => {
                 processedCart.totalPrice += totalPrice;
             }
 
+        }
+    }
+
+    // Xử lý hotel
+    if (cart.hotels.length > 0) {
+        for (const item of cart.hotels) {
+            const hotelInfo = await Hotel.findById(item.hotel_id);
+            const roomInfo = await Room.findById(item.room_id);
+
+            if (hotelInfo && roomInfo) {
+                const total = item.quantity * roomInfo.price;
+
+                processedCart.hotels.push({
+                    hotel_id: item.hotel_id,
+                    room_id: item.room_id,
+                    quantity: item.quantity,
+                    hotelInfo,
+                    roomInfo,
+                    price: roomInfo.price,
+                    totalPrice: total
+                });
+
+                processedCart.totalPrice += total;
+            }
         }
     }
 
