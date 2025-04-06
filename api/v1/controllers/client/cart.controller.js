@@ -202,20 +202,21 @@ module.exports.index = async (req, res) => {
     res.json(processedCart);
 }
 
-// // [PATCH] /api/v1/carts/add/:tour_id
+// // [PATCH] /api/v1/carts/delete/:tour_id
 module.exports.delete = async (req, res) => {
-    const cartId = req.cookies.cartId;
+    const cartId = req.cart.id;
     const tourId = req.params.tour_id;
 
-    await Cart.updateOne({
+    const data = await Cart.findOneAndUpdate({
         _id: cartId
     }, {
         "$pull": { tours: { "tour_id": tourId } }
-    });
+    }, { new: true });
 
     res.json({
         code: 200,
         message: "Xóa tour khỏi giỏ hàng thành công",
+        data: data
     });
 
 }
