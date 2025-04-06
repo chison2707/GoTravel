@@ -1,12 +1,21 @@
 const Cart = require("../../models/cart.model");
 const Tour = require("../../models/tour.model");
 const tourHelper = require("../../helper/tours");
+const Hotel = require("../../models/hotel.model");
+const Room = require("../../models/room.model");
 
 // [POST] /api/v1/carts/add/:tour_id
 module.exports.addPost = async (req, res) => {
     const tourId = req.params.tour_id;
     const quantity = parseInt(req.body.quantity);
     const cartId = req.cart.id;
+
+    if (!quantity || quantity <= 0) {
+        return res.status(400).json({
+            code: 400,
+            message: "Số lượng không hợp lệ"
+        });
+    }
 
     const cart = await Cart.findOne({
         _id: cartId
@@ -48,6 +57,72 @@ module.exports.addPost = async (req, res) => {
         code: 200,
         message: "Thêm giỏ hàng thành công",
     });
+}
+
+// [POST] /api/v1/carts/add/:hotel_id/:room_id
+module.exports.addPostHotel = async (req, res) => {
+    const hotelId = req.params.hotel_id;
+    const roomId = req.params.room_id;
+    const quantity = parseInt(req.body.quantity);
+    const cartId = req.cart.id;
+
+    if (!quantity || quantity <= 0) {
+        return res.status(400).json({
+            code: 400,
+            message: "Số lượng không hợp lệ"
+        });
+    }
+
+    const cart = await Cart.findOne({
+        _id: cartId
+    });
+    const hotel = await Hotel.findOne({ _id: hotelId });
+    const room = await Room.findOne({ _id: roomId });
+    const existHotelInCart = cart.hotels.find(item => item.hotel_id === hotelId && item.room_id === roomId);
+
+    if (existHotelInCart) {
+        const quantityNew = quantity + existHotelInCart.quantity;
+        if (quantityNew > room.availableRooms) {
+            return res.json({
+                code: 400,
+                message: "Số lượng phòng trong giỏ hàng vượt quá số lượng phòng đang trống"
+            });
+        }
+        const data = await Cart.findOneAndUpdate({
+            _id: cartId,
+            "hotels.hotel_id": hotelId,
+            "hotels.room_id": roomId
+        }, {
+            $set: {
+                "hotels.$.quantity": quantityNew
+            }
+        }, { new: true });
+        res.json({
+            code: 200,
+            message: "Thêm giỏ hàng thành công",
+            data: data
+        });
+    } else {
+        const objectCart = {
+            hotel_id: hotelId,
+            room_id: roomId,
+            quantity: quantity
+        }
+        const data = await Cart.findOneAndUpdate(
+            {
+                _id: cartId
+            },
+            {
+                $push: { hotels: objectCart }
+            }, { new: true }
+        );
+        res.json({
+            code: 200,
+            message: "Thêm giỏ hàng thành công",
+            data: data
+        });
+    }
+
 }
 
 // [GET] /api/v1/carts/
