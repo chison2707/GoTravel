@@ -200,10 +200,14 @@ module.exports.addPostHotel = async (req, res) => {
 module.exports.index = async (req, res) => {
     const userId = req.user._id;
 
+    const cart = await Cart.findOne({ user_id: userId });
 
-    const cart = await Cart.findOne({
-        user_id: userId
-    });
+    if (!cart) {
+        return res.json({
+            code: 400,
+            message: "Giỏ hàng không tồn tại"
+        });
+    }
 
     const processedCart = {
         _id: cart._id,
@@ -213,63 +217,60 @@ module.exports.index = async (req, res) => {
         totalPrice: 0
     };
 
-    if (cart.tours.length > 0) {
-        for (const item of cart.tours) {
-            const tourId = item.tour_id;
+    // Xử lý tour
+    for (const item of cart.tours) {
+        const tourInfo = await Tour.findById(item.tour_id);
+        if (!tourInfo) continue;
 
-            const tourInfo = await Tour.findOne({
-                _id: tourId
-            });
+        const priceNew = tourHelper.priceNewTour(tourInfo);
+        const totalPrice = item.quantity * priceNew;
 
-            if (tourInfo) {
-                const priceNew = tourHelper.priceNewTour(tourInfo);
-                const totalPrice = item.quantity * priceNew;
+        processedCart.tours.push({
+            tour_id: item.tour_id,
+            quantity: item.quantity,
+            tourInfo,
+            priceNew,
+            totalPrice
+        });
 
-                processedCart.tours.push({
-                    tour_id: tourId,
-                    quantity: item.quantity,
-                    tourInfo: tourInfo,
-                    priceNew: priceNew,
-                    totalPrice: totalPrice
-                });
-
-
-                processedCart.totalPrice += totalPrice;
-            }
-
-        }
+        processedCart.totalPrice += totalPrice;
     }
 
-    // Xử lý hotel
-    if (cart.hotels.length > 0) {
-        for (const hotelItem of cart.hotels) {
-            const hotelInfo = await Hotel.findById(hotelItem.hotel_id);
-            // const roomInfo = await Room.findById(item.room_id);
-            if (!hotelInfo) continue;
+    // Xử lý hotels & rooms
+    for (const hotelItem of cart.hotels) {
+        const hotelInfo = await Hotel.findById(hotelItem.hotel_id);
+        if (!hotelInfo) continue;
 
-            for (const roomItem of hotelItem.rooms) {
-                const roomInfo = await Room.findById(roomItem.room_id);
-                if (!roomInfo) continue;
+        const hotelProcessed = {
+            hotel_id: hotelItem.hotel_id,
+            hotelInfo,
+            rooms: []
+        };
 
-                const total = roomItem.quantity * roomInfo.price;
+        for (const roomItem of hotelItem.rooms) {
+            const roomInfo = await Room.findById(roomItem.room_id);
+            if (!roomInfo) continue;
 
-                processedCart.hotels.push({
-                    hotel_id: hotelItem.hotel_id,
-                    room_id: roomItem.room_id,
-                    quantity: roomItem.quantity,
-                    hotelInfo,
-                    roomInfo,
-                    price: roomInfo.price,
-                    totalPrice: total
-                });
+            const total = roomItem.quantity * roomInfo.price;
 
-                processedCart.totalPrice += total;
-            }
+            hotelProcessed.rooms.push({
+                room_id: roomItem.room_id,
+                roomInfo,
+                quantity: roomItem.quantity,
+                price: roomInfo.price,
+                totalPrice: total
+            });
+
+            processedCart.totalPrice += total;
+        }
+
+        if (hotelProcessed.rooms.length > 0) {
+            processedCart.hotels.push(hotelProcessed);
         }
     }
 
     res.json(processedCart);
-}
+};
 
 // [PATCH] /api/v1/carts/delete/:tour_id
 module.exports.delete = async (req, res) => {
