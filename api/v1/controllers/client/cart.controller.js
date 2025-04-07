@@ -291,11 +291,24 @@ module.exports.delete = async (req, res) => {
 
 }
 
-// [PATCH] /api/v1/carts/delete/:hotel_id/:room_id
+// [PATCH] /api/v1/carts/delete/hotels/:hotel_id/:room_id
 module.exports.deleteRoom = async (req, res) => {
     const cartId = req.cart.id;
     const hotelId = req.params.hotel_id;
     const roomId = req.params.room_id;
+
+    const cart = await Cart.findOne({
+        _id: cartId,
+        "hotels.hotel_id": hotelId,
+        "hotels.rooms.room_id": roomId
+    });
+
+    if (!cart) {
+        return res.json({
+            code: 400,
+            message: "Giỏ hàng không tồn tại hoặc khách sạn không có trong giỏ hàng"
+        });
+    }
 
     const data = await Cart.findOneAndUpdate({
         _id: cartId,
@@ -329,6 +342,35 @@ module.exports.deleteRoom = async (req, res) => {
     res.json({
         code: 200,
         message: "Xóa room khỏi giỏ hàng thành công",
+        data: data
+    });
+}
+
+// [PATCH] /api/v1/carts/delete/hotels/:hotel_id
+module.exports.deleteHotel = async (req, res) => {
+    const cartId = req.cart.id;
+    const hotelId = req.params.hotel_id;
+
+    const cart = await Cart.findOne({
+        _id: cartId,
+        "hotels.hotel_id": hotelId
+    });
+    if (!cart) {
+        return res.json({
+            code: 400,
+            message: "Giỏ hàng không tồn tại hoặc khách sạn không có trong giỏ hàng"
+        });
+    }
+
+    const data = await Cart.findOneAndUpdate({
+        _id: cartId
+    }, {
+        "$pull": { hotels: { "hotel_id": hotelId } }
+    }, { new: true });
+
+    res.json({
+        code: 200,
+        message: "Xóa khách sạn khỏi giỏ hàng thành công",
         data: data
     });
 }
