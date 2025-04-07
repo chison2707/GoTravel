@@ -129,6 +129,39 @@ module.exports.addPostHotel = async (req, res) => {
                 message: "Thêm giỏ hàng thành công",
                 data: data
             });
+        } else {
+            const quantityNew = quantity + roomInHotel.quantity;
+            if (quantityNew > room.availableRooms) {
+                return res.json({
+                    code: 400,
+                    message: "Số lượng phòng trong giỏ hàng vượt quá số lượng phòng đang trống"
+                });
+            }
+
+            const data = await Cart.findOneAndUpdate(
+                {
+                    _id: cartId,
+                    "hotels.hotel_id": hotelId,
+                    "hotels.rooms.room_id": roomId
+                },
+                {
+                    $set: {
+                        "hotels.$[hotel].rooms.$[room].quantity": quantityNew
+                    }
+                },
+                {
+                    arrayFilters: [
+                        { "hotel.hotel_id": hotelId },
+                        { "room.room_id": roomId }
+                    ],
+                    new: true
+                }
+            );
+            res.json({
+                code: 200,
+                message: "Thêm giỏ hàng thành công",
+                data: data
+            });
         }
 
     } else {
@@ -155,7 +188,6 @@ module.exports.addPostHotel = async (req, res) => {
             data: data
         });
     }
-
 }
 
 // [GET] /api/v1/carts/
@@ -292,7 +324,6 @@ module.exports.deleteRoom = async (req, res) => {
         message: "Xóa room khỏi giỏ hàng thành công",
         data: data
     });
-
 }
 
 // [PATCH] /api/v1/carts/update/:tour_id/:quantity
