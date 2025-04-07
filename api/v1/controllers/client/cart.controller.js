@@ -377,10 +377,21 @@ module.exports.deleteHotel = async (req, res) => {
 
 // [PATCH] /api/v1/carts/update/:tour_id/:quantity
 module.exports.update = async (req, res) => {
-    const cartId = req.cookies.cartId;
+    const cartId = req.cart.id;
     const tourId = req.params.tour_id;
     const quantity = parseInt(req.params.quantity);
 
+    const cart = await Cart.findOne({
+        _id: cartId,
+        "tours.tour_id": tourId
+    });
+
+    if (!cart) {
+        return res.json({
+            code: 400,
+            message: "Giỏ hàng không tồn tại hoặc tour không có trong giỏ hàng"
+        });
+    }
     const tour = await Tour.findOne({
         _id: tourId
     });
@@ -391,17 +402,71 @@ module.exports.update = async (req, res) => {
         });
     }
 
-    await Cart.updateOne({
+    const data = await Cart.findOneAndUpdate({
         _id: cartId,
         "tours.tour_id": tourId
     }, {
         $set: {
             "tours.$.quantity": quantity
         }
-    })
+    }, { new: true });
 
     res.json({
         code: 200,
         message: "Cập nhật số lượng giỏ hàng thành công",
+        data: data
+    });
+}
+
+// [PATCH] /api/v1/carts/updateRoom/:hotel_id/:room_id/:quantity
+module.exports.updateRoom = async (req, res) => {
+    const cartId = req.cart.id;
+    const hotelId = req.params.hotel_id;
+    const roomId = req.params.room_id;
+    const quantity = parseInt(req.params.quantity);
+
+    const cart = await Cart.findOne({
+        _id: cartId,
+        "hotels.hotel_id": hotelId,
+        "hotels.rooms.room_id": roomId
+    });
+
+    if (!cart) {
+        return res.json({
+            code: 400,
+            message: "Giỏ hàng không tồn tại hoặc khách sạn không có trong giỏ hàng"
+        });
+    }
+
+    const room = await Room.findOne({
+        _id: roomId
+    });
+    if (quantity < 1 || quantity > room.availableRooms) {
+        return res.json({
+            code: 400,
+            message: "Số lượng tour không hợp lệ"
+        });
+    }
+
+    const data = await Cart.findOneAndUpdate({
+        _id: cartId,
+        "hotels.hotel_id": hotelId,
+        "hotels.rooms.room_id": roomId
+    }, {
+        $set: {
+            "hotels.$[hotel].rooms.$[room].quantity": quantity
+        }
+    }, {
+        arrayFilters: [
+            { "hotel.hotel_id": hotelId },
+            { "room.room_id": roomId }
+        ],
+        new: true
+    });
+
+    res.json({
+        code: 200,
+        message: "Cập nhật số lượng giỏ hàng thành công",
+        data: data
     });
 }
