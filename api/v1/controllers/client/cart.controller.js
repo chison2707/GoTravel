@@ -253,25 +253,43 @@ module.exports.delete = async (req, res) => {
 }
 
 // [PATCH] /api/v1/carts/delete/:hotel_id/:room_id
-module.exports.deleteHotel = async (req, res) => {
+module.exports.deleteRoom = async (req, res) => {
     const cartId = req.cart.id;
     const hotelId = req.params.hotel_id;
     const roomId = req.params.room_id;
 
     const data = await Cart.findOneAndUpdate({
-        _id: cartId
+        _id: cartId,
+        "hotels.hotel_id": hotelId
     }, {
         "$pull": {
-            hotels: {
-                "hotel_id": hotelId,
-                "room_id": roomId
-            }
+            "hotels.$.rooms": { room_id: roomId }
         }
     }, { new: true });
 
+    const hotelInCart = data.hotels.find(hotel => hotel.hotel_id === hotelId);
+
+    if (hotelInCart && hotelInCart.rooms.length === 0) {
+        // Nếu không còn phòng nào thì xóa luôn khách sạn đó
+        const finalCart = await Cart.findOneAndUpdate(
+            { _id: cartId },
+            {
+                $pull: {
+                    hotels: { hotel_id: hotelId }
+                }
+            },
+            { new: true }
+        );
+        return res.json({
+            code: 200,
+            message: "Xóa phòng thành công và khách sạn không còn phòng nên đã xóa luôn khách sạn khỏi giỏ hàng",
+            data: finalCart
+        });
+    }
+
     res.json({
         code: 200,
-        message: "Xóa tour khỏi giỏ hàng thành công",
+        message: "Xóa room khỏi giỏ hàng thành công",
         data: data
     });
 

@@ -2,11 +2,11 @@ const Cart = require("../../models/cart.model");
 const Tour = require("../../models/tour.model");
 const Order = require("../../models/order.model");
 const Voucher = require("../../models/voucher.model");
+const Hotel = require("../../models/hotel.model");
 const tourHelper = require("../../helper/tours");
 const generate = require("../../helper/generate");
 const vnpay = require('../../../../config/vnpay');
 const moment = require("moment");
-const { VerifyReturnUrl } = require('vnpay');
 
 
 //[GET] api/v1/checkout
@@ -15,17 +15,24 @@ module.exports.index = async (req, res) => {
         const userId = req.user._id;
 
         const cart = await Cart.findOne({ user_id: userId }).lean();
-        if (!cart || !cart.tours.length) {
-            return res.json({ _id: null, user_id: userId, tours: [], totalPrice: 0 });
+        if (!cart || (!cart.tours.length && !cart.hotels.length)) {
+            return res.json({
+                _id: null,
+                user_id: userId,
+                tours: [],
+                hotels: [],
+                totalPrice: 0
+            });
         }
 
-        // Lấy danh sách tất cả tour trong giỏ hàng
+        let totalPrice = 0;
+
+        // ===== Xử lý Tours =====
         const tourIds = cart.tours.map(item => item.tour_id);
         const tours = await Tour.find({ _id: { $in: tourIds } }).lean();
 
-        let totalPrice = 0;
         const processedTours = cart.tours.map(item => {
-            const tourInfo = tours.find(tour => tour._id.toString() === item.tour_id.toString());
+            const tourInfo = tours.find(t => t._id.toString() === item.tour_id.toString());
             if (!tourInfo) return null;
 
             const priceNew = tourHelper.priceNewTour(tourInfo);
@@ -39,17 +46,49 @@ module.exports.index = async (req, res) => {
                 priceNew,
                 totalPrice: total
             };
-        }).filter(item => item !== null);
+        }).filter(Boolean);
+
+        // ===== Xử lý Hotels =====
+        const hotelIds = cart.hotels.map(item => item.hotel_id);
+        const hotels = await Hotel.find({ _id: { $in: hotelIds } }).lean();
+
+        const processedHotels = cart.hotels.map(item => {
+            const hotelInfo = hotels.find(h => h._id.toString() === item.hotel_id.toString());
+            if (!hotelInfo) return null;
+
+            const roomInfo = hotelInfo.rooms.find(r => r._id.toString() === item.room_id.toString());
+            if (!roomInfo) return null;
+
+            const priceRoom = roomInfo.price;
+            const total = item.quantity * priceRoom;
+            totalPrice += total;
+
+            return {
+                hotel_id: item.hotel_id,
+                room_id: item.room_id,
+                quantity: item.quantity,
+                hotelInfo,
+                roomInfo,
+                priceRoom,
+                totalPrice: total
+            };
+        }).filter(Boolean);
 
         res.json({
             _id: cart._id,
             tours: processedTours,
+            hotels: processedHotels,
             totalPrice
         });
     } catch (error) {
-        res.status(500).json({ message: "Internal Server Error" });
+        console.error(error);
+        res.json({
+            code: "500",
+            message: "Error" + error
+        });
     }
 };
+
 
 //[POST] api/v1/checkout/order
 module.exports.order = async (req, res) => {
