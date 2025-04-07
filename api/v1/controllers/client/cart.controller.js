@@ -97,8 +97,7 @@ module.exports.addPostHotel = async (req, res) => {
         const roomInHotel = hotelInCart.rooms.find(room => room.room_id === roomId);
 
         if (!roomInHotel) {
-            const quantityNew = quantity + roomInHotel.quantity;
-            if (quantityNew > room.availableRooms) {
+            if (quantity > room.availableRooms) {
                 return res.json({
                     code: 400,
                     message: "Số lượng phòng trong giỏ hàng vượt quá số lượng phòng đang trống"
@@ -165,6 +164,13 @@ module.exports.addPostHotel = async (req, res) => {
         }
 
     } else {
+        const room = await Room.findById(roomId);
+        if (quantity > room.availableRooms) {
+            return res.json({
+                code: 400,
+                message: "Số lượng phòng trong giỏ hàng vượt quá số lượng phòng đang trống"
+            });
+        }
         const data = await Cart.findOneAndUpdate(
             { _id: cartId },
             {
