@@ -23,10 +23,14 @@ const orderSchema = new mongoose.Schema({
     hotels: [
         {
             hotel_id: String,
-            room_id: String,
-            price: Number,
-            discount: Number,
-            quantity: Number
+            rooms: [
+                {
+                    room_id: String,
+                    price: Number,
+                    quantity: Number
+                }
+            ],
+
         }
     ],
     totalPrice: Number,
