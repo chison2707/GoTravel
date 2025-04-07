@@ -291,7 +291,7 @@ module.exports.delete = async (req, res) => {
 
 }
 
-// [PATCH] /api/v1/carts/delete/hotels/:hotel_id/:room_id
+// [PATCH] /api/v1/carts/deleteHotel/:hotel_id/:room_id
 module.exports.deleteRoom = async (req, res) => {
     const cartId = req.cart.id;
     const hotelId = req.params.hotel_id;
@@ -346,7 +346,7 @@ module.exports.deleteRoom = async (req, res) => {
     });
 }
 
-// [PATCH] /api/v1/carts/delete/hotels/:hotel_id
+// [PATCH] /api/v1/carts/deleteHotel/:hotel_id
 module.exports.deleteHotel = async (req, res) => {
     const cartId = req.cart.id;
     const hotelId = req.params.hotel_id;
