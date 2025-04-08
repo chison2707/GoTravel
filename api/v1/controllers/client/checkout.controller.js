@@ -3,11 +3,11 @@ const Tour = require("../../models/tour.model");
 const Order = require("../../models/order.model");
 const Voucher = require("../../models/voucher.model");
 const Hotel = require("../../models/hotel.model");
+const Room = require("../../models/room.model");
 const tourHelper = require("../../helper/tours");
 const generate = require("../../helper/generate");
 const vnpay = require('../../../../config/vnpay');
 const moment = require("moment");
-
 
 //[GET] api/v1/checkout
 module.exports.index = async (req, res) => {
@@ -49,42 +49,57 @@ module.exports.index = async (req, res) => {
         }).filter(Boolean);
 
         // ===== Xử lý Hotels =====
-        const hotelIds = cart.hotels.map(item => item.hotel_id);
+        const hotelIds = cart.hotels.map(h => h.hotel_id);
         const hotels = await Hotel.find({ _id: { $in: hotelIds } }).lean();
 
-        const processedHotels = cart.hotels.map(item => {
-            const hotelInfo = hotels.find(h => h._id.toString() === item.hotel_id.toString());
-            if (!hotelInfo) return null;
+        const processedHotels = [];
 
-            const roomInfo = hotelInfo.rooms.find(r => r._id.toString() === item.room_id.toString());
-            if (!roomInfo) return null;
+        for (const hotelCart of cart.hotels) {
+            const hotelInfo = hotels.find(h => h._id.toString() === hotelCart.hotel_id.toString());
+            if (!hotelInfo) continue;
 
-            const priceRoom = roomInfo.price;
-            const total = item.quantity * priceRoom;
-            totalPrice += total;
+            // ===== Xử lý Rooms =====
+            const processedRooms = [];
 
-            return {
-                hotel_id: item.hotel_id,
-                room_id: item.room_id,
-                quantity: item.quantity,
+            for (const roomCart of hotelCart.rooms) {
+                const roomInfo = await Room.findOne({
+                    _id: roomCart.room_id
+                });
+                if (!roomInfo) continue;
+
+                const price = roomInfo.price;
+                const total = roomCart.quantity * price;
+                totalPrice += total;
+
+                processedRooms.push({
+                    room_id: roomCart.room_id,
+                    quantity: roomCart.quantity,
+                    roomInfo,
+                    price,
+                    totalPrice: total
+                });
+            }
+
+            processedHotels.push({
+                hotel_id: hotelCart.hotel_id,
                 hotelInfo,
-                roomInfo,
-                priceRoom,
-                totalPrice: total
-            };
-        }).filter(Boolean);
+                rooms: processedRooms
+            });
+        }
 
         res.json({
             _id: cart._id,
+            user_id: cart.user_id,
             tours: processedTours,
             hotels: processedHotels,
             totalPrice
         });
+
     } catch (error) {
         console.error(error);
         res.json({
             code: "500",
-            message: "Error" + error
+            message: "Lỗi khi xử lý giỏ hàng: " + error.message
         });
     }
 };
