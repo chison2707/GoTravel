@@ -207,3 +207,25 @@ module.exports.logout = async (req, res) => {
         message: "Đăng xuất thành công"
     });
 }
+
+// [PATCH]/api/v1/users/edit
+module.exports.edit = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const data = await User.findOneAndUpdate({
+            _id: userId
+        }, req.body, {
+            new: true
+        });
+        res.json({
+            code: 200,
+            message: "Cập nhật thông tin thành công",
+            data: data
+        });
+    } catch (error) {
+        res.json({
+            code: 500,
+            message: "Có lỗi xảy ra" + error.message,
+        });
+    }
+};
