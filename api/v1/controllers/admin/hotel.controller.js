@@ -435,3 +435,48 @@ module.exports.detail = async (req, res) => {
         }
     }
 };
+
+// [PATCH]/api/v1/admin/hotels/stockRoom/:stock/:hotelId/:roomId
+module.exports.stock = async (req, res) => {
+    const permissions = req.roles.permissions;
+    if (!permissions.includes("hotel_edit")) {
+        return res.json({
+            code: 400,
+            message: "Bạn không có quyền cập nhật trạng thái room khách sạn"
+        });
+    } else {
+        try {
+            const hotelId = req.params.hotelId;
+            const roomId = req.params.roomId;
+            const stock = parseInt(req.params.stock);
+            const stockRoom = await Room.findOneAndUpdate(
+                {
+                    _id: roomId,
+                    hotel_id: hotelId
+                }
+                ,
+                {
+                    availableRooms: stock
+                },
+                { new: true }
+            );
+
+            if (!stockRoom) {
+                return res.json({
+                    code: 404,
+                    message: "Room không tồn tại hoặc đã bị xoá"
+                });
+            }
+            res.json({
+                code: 200,
+                message: "Cập nhật thành công",
+                stockRoom: stockRoom
+            });
+        } catch (error) {
+            res.json({
+                code: 500,
+                message: "Error:" + error
+            });
+        }
+    }
+};

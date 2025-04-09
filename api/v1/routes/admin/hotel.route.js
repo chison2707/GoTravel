@@ -37,4 +37,5 @@ router.patch("/changeStatus/:status/:hotelId/:roomId", controller.changeStatusRo
 router.delete("/delete/:hotelId", controller.deleteHotel);
 router.delete("/delete/:hotelId/:roomId", controller.deleteRoom);
 router.get("/detail/:hotelId", controller.detail);
+router.patch("/stockRoom/:stock/:hotelId/:roomId", controller.stock);
 module.exports = router;
