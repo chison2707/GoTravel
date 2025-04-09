@@ -131,10 +131,10 @@ module.exports.order = async (req, res) => {
             _id: tour.tour_id
         });
 
-        if (!tourInfo) {
+        if (!tourInfo || tourInfo.stock < tour.quantity) {
             return res.json({
                 code: "400",
-                message: "Tour không tồn tại!"
+                message: "Tour không tồn tại! hoặc số lượng tour hiện tại không đủ!"
             });
         }
         const priceNew = tourHelper.priceNewTour(tourInfo);
@@ -172,10 +172,10 @@ module.exports.order = async (req, res) => {
         for (const room of hotel.rooms) {
             const roomInfo = await Room.findById(room.room_id);
 
-            if (!roomInfo) {
+            if (!roomInfo || roomInfo.availableRooms < room.quantity) {
                 return res.json({
                     code: "400",
-                    message: "Room không tồn tại!"
+                    message: "Room không tồn tại! hoặc số lượng phòng hiện tại không đủ!"
                 });
             }
 
