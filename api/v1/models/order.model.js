@@ -33,6 +33,7 @@ const orderSchema = new mongoose.Schema({
 
         }
     ],
+    voucherCode: String,
     totalPrice: Number,
     updateBy: [
         {
