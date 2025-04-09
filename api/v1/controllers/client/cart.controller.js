@@ -45,6 +45,12 @@ module.exports.addPost = async (req, res) => {
             data: data
         });
     } else {
+        if (quantity > tour.stock) {
+            return res.json({
+                code: 400,
+                message: "Số lượng tour trong giỏ hàng vượt quá số lượng tour đang có"
+            });
+        }
         const objectCart = {
             tour_id: tourId,
             quantity: quantity
