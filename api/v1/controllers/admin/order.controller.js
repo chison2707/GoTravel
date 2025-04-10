@@ -1,6 +1,8 @@
 const Order = require("../../models/order.model");
 const paginationHelper = require("../../helper/pagination");
 const Tour = require("../../models/tour.model");
+const Hotel = require("../../models/hotel.model");
+const Room = require("../../models/room.model");
 const tourHelper = require("../../helper/tours");
 
 // [GET]/api/v1/admin/orders
@@ -98,7 +100,36 @@ module.exports.detail = async (req, res) => {
                 priceNew: tourHelper.priceNewTour(tourInfo)
             });
         }
-        res.json(tours);
+
+        const hotels = [];
+        for (const item of order.hotels) {
+            const hotelInfo = await Hotel.findOne({
+                _id: item.hotel_id
+            });
+            const rooms = [];
+            for (const room of item.rooms) {
+                const roomInfo = await Room.findOne({
+                    _id: room.room_id
+                });
+                rooms.push({
+                    roomInfo: roomInfo,
+                    quantity: room.quantity,
+                    price: room.price
+                });
+            }
+            hotels.push({
+                hotelInfo: hotelInfo,
+                rooms: rooms
+            });
+        } res.json({
+            code: 200,
+            message: "Lấy thông tin đơn hàng thành công!",
+            data: {
+                order: order,
+                tours: tours,
+                hotels: hotels
+            }
+        });
     }
 };
 
