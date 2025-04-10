@@ -24,6 +24,10 @@ const HotelSchema = new mongoose.Schema({
         slug: "name",
         unique: true
     },
+    slug_city: {
+        type: String,
+        slug: "location.city"
+    },
     deleted: {
         type: Boolean,
         default: false
