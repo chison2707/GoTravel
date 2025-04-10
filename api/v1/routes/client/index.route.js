@@ -6,6 +6,7 @@ const cartRoute = require("./cart.route");
 const checkoutRoute = require("./checkout.route");
 const chatRoute = require("./chat.route");
 const hotelRoute = require("./hotel.route");
+const searchRoute = require("./search.route");
 
 module.exports = (app) => {
 
@@ -19,4 +20,5 @@ module.exports = (app) => {
     app.use(version + '/checkout', checkoutRoute);
     app.use(version + '/chats', chatRoute);
     app.use(version + '/hotels', hotelRoute);
+    app.use(version + '/search', searchRoute);
 }
