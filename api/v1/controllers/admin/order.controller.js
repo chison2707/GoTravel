@@ -38,7 +38,7 @@ module.exports.index = async (req, res) => {
         );
         // end pagination
 
-        const orders = await Order.find().sort(sort).limit(objPagination.limitItems).skip(objPagination.skip);
+        const orders = await Order.find(find).sort(sort).limit(objPagination.limitItems).skip(objPagination.skip);
 
         res.json(orders);
     }

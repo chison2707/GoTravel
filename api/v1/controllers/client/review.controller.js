@@ -102,8 +102,6 @@ module.exports.delete = async (req, res) => {
         const id = req.params.id;
         const userId = req.user._id;
 
-        console.log(userId)
-
         const data = await Review.deleteOne({
             _id: id,
             user_id: userId

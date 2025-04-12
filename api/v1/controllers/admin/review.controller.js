@@ -34,7 +34,7 @@ module.exports.indexHotel = async (req, res) => {
         );
         // end pagination
 
-        const reviews = await Review.find().sort(sort).limit(objPagination.limitItems).skip(objPagination.skip);
+        const reviews = await Review.find(find).sort(sort).limit(objPagination.limitItems).skip(objPagination.skip);
 
         res.json(reviews);
     }
@@ -75,7 +75,7 @@ module.exports.indexRoom = async (req, res) => {
         );
         // end pagination
 
-        const reviews = await Review.find().sort(sort).limit(objPagination.limitItems).skip(objPagination.skip);
+        const reviews = await Review.find(find).sort(sort).limit(objPagination.limitItems).skip(objPagination.skip);
 
         res.json(reviews);
     }

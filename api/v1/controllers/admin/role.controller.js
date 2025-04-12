@@ -34,7 +34,7 @@ module.exports.index = async (req, res) => {
         );
         // end pagination
 
-        const roles = await Role.find().sort(sort).limit(objPagination.limitItems).skip(objPagination.skip);
+        const roles = await Role.find(find).sort(sort).limit(objPagination.limitItems).skip(objPagination.skip);
 
         res.json(roles);
     }

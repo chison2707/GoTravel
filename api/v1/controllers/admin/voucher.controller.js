@@ -30,7 +30,7 @@ module.exports.index = async (req, res) => {
         );
         // end pagination
 
-        const vouchers = await Voucher.find().sort(sort).limit(objPagination.limitItems).skip(objPagination.skip);
+        const vouchers = await Voucher.find(find).sort(sort).limit(objPagination.limitItems).skip(objPagination.skip);
 
         res.json(vouchers);
     }
