@@ -39,3 +39,44 @@ module.exports.indexHotel = async (req, res) => {
         res.json(reviews);
     }
 };
+
+// [GET]/api/v1/admin/reviews/rooms/:hotelId/:roomId
+module.exports.indexRoom = async (req, res) => {
+    const permissions = req.roles.permissions;
+    if (!permissions.includes("review_view")) {
+        return res.json({
+            code: 400,
+            message: "Bạn không có quyền xem danh sách review"
+        });
+    } else {
+        const hotelId = req.params.hotelId;
+        const roomId = req.params.roomId;
+        let find = {
+            hotel_id: hotelId,
+            room_id: roomId,
+            deleted: false
+        };
+
+        // sort
+        const sort = {};
+        if (req.query.sortKey && req.query.sortValue) {
+            sort[req.query.sortKey] = req.query.sortValue;
+        }
+
+        // pagination
+        const countRecords = await Review.countDocuments(find);
+        let objPagination = paginationHelper(
+            {
+                currentPage: 1,
+                limitItems: 5
+            },
+            req.query,
+            countRecords
+        );
+        // end pagination
+
+        const reviews = await Review.find().sort(sort).limit(objPagination.limitItems).skip(objPagination.skip);
+
+        res.json(reviews);
+    }
+};
