@@ -4,9 +4,7 @@ const router = express.Router();
 const controller = require("../../controllers/admin/user.contoller");
 
 router.get("/", controller.index);
-// router.post("/create", authMiddleware.requireAuth, validate.createAccount, controller.createPost);
-// router.post("/login", validate.loginPost, controller.login);
-// router.get("/detail/:id", authMiddleware.requireAuth, controller.detail);
+router.get("/detail/:id", controller.detail);
 // router.patch("/edit/:id", authMiddleware.requireAuth, controller.edit);
 // router.patch("/changeStatus/:status/:id", authMiddleware.requireAuth, controller.changeStatus);
 // router.delete("/delete/:id", authMiddleware.requireAuth, controller.delete);

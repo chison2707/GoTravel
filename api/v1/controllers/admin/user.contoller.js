@@ -1,7 +1,7 @@
 const User = require("../../models/user.model");
 const paginationHelper = require("../../helper/pagination");
 
-// [GET]/api/v1/admin/user
+// [GET]/api/v1/admin/users
 module.exports.index = async (req, res) => {
     const permissions = req.roles.permissions;
     if (!permissions.includes("user_view")) {
@@ -37,5 +37,29 @@ module.exports.index = async (req, res) => {
         const accounts = await User.find(find).sort(sort).limit(objPagination.limitItems).skip(objPagination.skip).select("-password");
 
         res.json(accounts);
+    }
+};
+
+// [GET]/api/v1/admin/users/detail/:id
+module.exports.detail = async (req, res) => {
+    const permissions = req.roles.permissions;
+    if (!permissions.includes("user_view")) {
+        return res.json({
+            code: 400,
+            message: "Bạn không có quyền xem danh sách user"
+        });
+    } else {
+        const id = req.params.id;
+
+        const data = await User.findOne({
+            _id: id,
+            deleted: false
+        }).select("-password -token");
+
+        return res.json({
+            code: 200,
+            message: "Lấy thông tin thành công!",
+            data
+        });
     }
 };
