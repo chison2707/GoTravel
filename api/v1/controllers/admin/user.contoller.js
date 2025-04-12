@@ -46,7 +46,7 @@ module.exports.detail = async (req, res) => {
     if (!permissions.includes("user_view")) {
         return res.json({
             code: 400,
-            message: "Bạn không có quyền xem danh sách user"
+            message: "Bạn không có quyền xem chi tiết user"
         });
     } else {
         const id = req.params.id;
@@ -60,6 +60,54 @@ module.exports.detail = async (req, res) => {
             code: 200,
             message: "Lấy thông tin thành công!",
             data
+        });
+    }
+};
+
+// [PATCH]/api/v1/admin/users/changeStatus/:status/:id
+module.exports.changeStatus = async (req, res) => {
+    const permissions = req.roles.permissions;
+    if (!permissions.includes("user_edit")) {
+        return res.json({
+            code: 400,
+            message: "Bạn không có quyền cập nhật trạng thái user"
+        });
+    } else {
+        const status = req.params.status;
+        const id = req.params.id;
+
+        const data = await User.findOneAndUpdate(
+            { _id: id, deleted: false },
+            { status: status },
+            { new: true }
+        ).select("-password -token");
+
+        return res.json({
+            code: 200,
+            message: "Cập nhật trạng thái thành công!",
+            data
+        });
+    }
+};
+
+// [DELETE]/api/v1/admin/users/delete/:id
+module.exports.delete = async (req, res) => {
+    const permissions = req.roles.permissions;
+    if (!permissions.includes("user_delete")) {
+        return res.json({
+            code: 400,
+            message: "Bạn không có quyền xóa user"
+        });
+    } else {
+        const id = req.params.id;
+
+        await User.deleteOne({
+            _id: id
+        });
+
+        return res.json({
+            code: 200,
+            message: "xóa tài khoản thành công!",
         });
     }
 };
