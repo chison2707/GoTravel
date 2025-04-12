@@ -80,3 +80,25 @@ module.exports.indexRoom = async (req, res) => {
         res.json(reviews);
     }
 };
+
+// [DELETE]/api/v1/admin/reviews/delete/:id
+module.exports.deleteHotel = async (req, res) => {
+    const permissions = req.roles.permissions;
+    if (!permissions.includes("review_delete")) {
+        return res.json({
+            code: 400,
+            message: "Bạn không có quyền xóa danh sách review"
+        });
+    } else {
+        const id = req.params.id;
+
+        await Review.deleteOne({
+            _id: id
+        });
+
+        res.json({
+            code: 200,
+            message: "Đã xóa review thành công"
+        });
+    }
+};
