@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const Hotel = require("../../models/hotel.model");
 const Room = require("../../models/room.model");
 const Review = require("../../models/hotelReview.model");
@@ -86,6 +87,38 @@ module.exports.getReviews = async (req, res) => {
             code: 200,
             message: "Lấy danh sách đánh giá thành công",
             reviews: reviews
+        });
+    } catch (error) {
+        return res.json({
+            code: 500,
+            message: "Error" + error
+        });
+    }
+}
+
+// [DELETE]/api/v1/reviews/delete/:id
+module.exports.delete = async (req, res) => {
+    try {
+        const id = req.params.id;
+        const userId = req.user._id;
+
+        console.log(userId)
+
+        const data = await Review.deleteOne({
+            _id: id,
+            user_id: userId
+        });
+
+        if (data.deletedCount === 0) {
+            return res.json({
+                code: 404,
+                message: "Xóa review thất bại!"
+            });
+        }
+
+        return res.json({
+            code: 200,
+            message: "Xóa review thành công!"
         });
     } catch (error) {
         return res.json({
