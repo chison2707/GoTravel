@@ -1,5 +1,12 @@
 const SettingGeneral = require("../../models/settings-general.model");
 
+//[GET] / admin/settings/general
+module.exports.general = async (req, res) => {
+    const settingGeneral = await SettingGeneral.findOne({});
+
+    res.json(settingGeneral);
+}
+
 //[PATCH] /api/v1/admin/settings/general
 module.exports.generalPatch = async (req, res) => {
     const permissions = req.roles.permissions;

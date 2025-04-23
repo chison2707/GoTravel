@@ -7,6 +7,7 @@ const uploadCloud = require("../../middlewares/admin/uploadCloud.middleware");
 const validate = require("../../validates/admin/setting.validate");
 const upload = multer();
 
+router.get('/general', controller.general);
 router.patch('/general', upload.single('logo'),
     uploadCloud.uploadSingle,
     validate.settingValidate,
