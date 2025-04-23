@@ -9,9 +9,13 @@ const hotelRoute = require("./hotel.route");
 const searchRoute = require("./search.route");
 const reviewRoute = require("./review.route");
 
+const settingGeneralMiddleware = require("../../middlewares/client/setting.middleware");
+
 module.exports = (app) => {
 
     const version = "/api/v1";
+
+    app.use(settingGeneralMiddleware.settingGeneral)
 
     app.use(version + '/', homeRoute);
     app.use(version + '/users', userRoute);

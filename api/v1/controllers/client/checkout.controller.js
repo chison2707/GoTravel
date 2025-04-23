@@ -7,6 +7,7 @@ const Room = require("../../models/room.model");
 const tourHelper = require("../../helper/tours");
 const generate = require("../../helper/generate");
 const vnpay = require('../../../../config/vnpay');
+const sendMailHelper = require("../../helper/sendMail");
 const moment = require("moment");
 
 //[GET] api/v1/checkout
@@ -359,6 +360,23 @@ module.exports.paymentCallback = async (req, res) => {
         { status: "paid", paymentInfo: verify },
         { new: true }
     );
+    // gửi otp qua email user
+    const subject = `Cảm ơn ${req.user.fullName} đã tin tưởng dịch vụ của chúng tôi!`;
+    const html = `
+        <p>Chào <strong>${req.user.fullName}</strong>,</p>
+        <p>
+            Cảm ơn bạn đã đặt dịch vụ tại <strong>${req.settingGeneral.websiteName}</strong>!<br>
+            Chúng tôi rất vui được bạn tin tưởng chọn dịch vụ của chúng tôi.
+        </p>
+        <p>
+            Mọi thắc mắc, bạn cứ liên hệ tụi mình qua <strong>${req.settingGeneral.phone}</strong> hoặc <strong>${req.settingGeneral.email}</strong>.
+        </p>
+        <p>Hy vọng sớm được gặp bạn!</p>
+        <p>Thân mến,<br>
+        <strong>${req.settingGeneral.websiteName}</strong></p>`;
+
+    sendMailHelper.sendMail(req.user.email, subject, html);
+
 
     return res.json({
         code: 200,
