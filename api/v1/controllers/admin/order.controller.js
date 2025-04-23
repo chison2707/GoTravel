@@ -14,7 +14,7 @@ module.exports.index = async (req, res) => {
             message: "Bạn không có quyền xem danh sách đơn hàng"
         });
     } else {
-        let find = { deleted: false };
+        let find = {};
 
         if (req.query.status) {
             find.status = req.query.status;
