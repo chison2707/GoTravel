@@ -59,6 +59,20 @@ module.exports.createPost = async (req, res) => {
             const countTour = await Tour.countDocuments();
             const code = generate.generateTourCode(countTour + 1);
 
+            let rawTimeStarts = req.body.timeStarts;
+
+            if (typeof rawTimeStarts === "string") {
+                try {
+                    rawTimeStarts = JSON.parse(rawTimeStarts);
+                } catch (err) {
+                    return res.status(400).json({
+                        code: 400,
+                        message: "timeStarts không đúng định dạng JSON"
+                    });
+                }
+            }
+
+
             const tour = new Tour({
                 title: req.body.title,
                 code: code,
@@ -66,7 +80,10 @@ module.exports.createPost = async (req, res) => {
                 discount: parseInt(req.body.discount),
                 stock: parseInt(req.body.stock),
                 category_id: req.body.category_id,
-                timeStart: req.body.timeStart,
+                timeStarts: rawTimeStarts.map(item => ({
+                    timeDepart: new Date(item.timeDepart),
+                    stock: parseInt(item.stock),
+                })),
                 status: req.body.status,
                 images: req.body.images,
                 information: req.body.information,
