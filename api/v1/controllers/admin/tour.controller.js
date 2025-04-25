@@ -201,21 +201,54 @@ module.exports.editPatch = async (req, res) => {
     } else {
         try {
             const id = req.params.id;
-            if (req.body.price) req.body.price = parseInt(req.body.price);
-            if (req.body.discount) req.body.discount = parseInt(req.body.discount);
-            if (req.body.stock) req.body.stock = parseInt(req.body.stock);
-            if (req.body.position) req.body.position = parseInt(req.body.position);
+            const existingTour = await Tour.findById(id);
 
-            const data = await Tour.updateOne({
-                _id: id
-            }, {
-                ...req.body
-            });
+            if (!existingTour) {
+                return res.json({
+                    code: 404,
+                    message: "Tour không tồn tại"
+                });
+            }
 
+            let rawTimeStarts = req.body.timeStarts;
+
+            if (typeof rawTimeStarts === "string") {
+                try {
+                    rawTimeStarts = JSON.parse(rawTimeStarts);
+                } catch (err) {
+                    return res.json({
+                        code: 400,
+                        message: "timeStarts không đúng định dạng JSON"
+                    });
+                }
+            }
+
+            const updatedData = {
+                title: req.body.title || existingTour.title,
+                price: req.body.price ? parseInt(req.body.price) : existingTour.price,
+                discount: req.body.discount ? parseInt(req.body.discount) : existingTour.discount,
+                stock: req.body.stock ? parseInt(req.body.stock) : existingTour.stock,
+                category_id: req.body.category_id || existingTour.category_id,
+                timeStarts: rawTimeStarts ? rawTimeStarts.map(item => ({
+                    timeDepart: new Date(item.timeDepart),
+                    stock: parseInt(item.stock),
+                })) : existingTour.timeStarts,
+                status: req.body.status || existingTour.status,
+                images: req.body.images || existingTour.images,
+                information: req.body.information || existingTour.information,
+                schedule: req.body.schedule || existingTour.schedule,
+            };
+
+            const data = await Tour.findByIdAndUpdate(
+                id,
+                { $set: updatedData },
+                { new: true }
+            );
 
             res.json({
                 code: 200,
-                message: "Cập nhật tour thành công"
+                message: "Cập nhật tour thành công",
+                data: data
             });
         } catch (error) {
             res.json({
