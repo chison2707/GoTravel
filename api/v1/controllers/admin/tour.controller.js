@@ -258,34 +258,3 @@ module.exports.editPatch = async (req, res) => {
         }
     }
 };
-
-// [PATCH]/api/v1/admin/tours/change-stock/:stock/:id
-module.exports.stock = async (req, res) => {
-    const permissions = req.roles.permissions;
-    if (!permissions.includes("tour_edit")) {
-        return res.json({
-            code: 400,
-            message: "Bạn không có quyền chỉnh sửa trạng thái tour"
-        });
-    } else {
-        try {
-            const id = req.params.id;
-            const stock = parseInt(req.params.stock);
-            const data = await Tour.findOneAndUpdate({
-                _id: id
-            }, {
-                stock: stock
-            }, { new: true });
-            res.json({
-                code: 200,
-                message: "Cập nhật số lượng thành công",
-                data: data
-            });
-        } catch (error) {
-            res.json({
-                code: 500,
-                message: "Lỗi! " + error
-            })
-        }
-    }
-};
