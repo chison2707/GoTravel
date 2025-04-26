@@ -271,17 +271,35 @@ module.exports.index = async (req, res) => {
         if (!tourInfo) continue;
 
         const priceNew = tourHelper.priceNewTour(tourInfo);
-        const totalPrice = item.quantity * priceNew;
-
-        processedCart.tours.push({
+        const tourProcessed = {
             tour_id: item.tour_id,
-            quantity: item.quantity,
             tourInfo,
             priceNew,
-            totalPrice
-        });
+            timeStarts: []
+        };
+        for (const timeStart of item.timeStarts) {
+            const totalPrice = timeStart.stock * parseInt(priceNew);
 
-        processedCart.totalPrice += totalPrice;
+            tourProcessed.timeStarts.push({
+                timeDepart: timeStart.timeDepart,
+                quantity: timeStart.quantity,
+                totalPrice: totalPrice
+            })
+            processedCart.totalPrice += totalPrice;
+        }
+
+        if (tourProcessed.timeStarts.length > 0) {
+            processedCart.tours.push(tourProcessed);
+        }
+
+        // processedCart.tours.push({
+        //     tour_id: item.tour_id,
+        //     quantity: item.quantity,
+        //     tourInfo,
+        //     priceNew,
+        //     totalPrice
+        // });
+
     }
 
     // Xử lý hotels & rooms
