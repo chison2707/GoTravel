@@ -267,7 +267,7 @@ module.exports.index = async (req, res) => {
 
     // Xử lý tour
     for (const item of cart.tours) {
-        const tourInfo = await Tour.findById(item.tour_id);
+        const tourInfo = await Tour.findById(item.tour_id).select("-timeStarts");
         if (!tourInfo) continue;
 
         const priceNew = tourHelper.priceNewTour(tourInfo);
