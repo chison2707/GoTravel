@@ -506,12 +506,12 @@ module.exports.update = async (req, res) => {
     }
 }
 
-// [PATCH] /api/v1/carts/updateRoom/:hotel_id/:room_id/:quantity
+// [PATCH] /api/v1/carts/updateRoom/:hotel_id/:room_id?quantity=
 module.exports.updateRoom = async (req, res) => {
     const cartId = req.cart.id;
     const hotelId = req.params.hotel_id;
     const roomId = req.params.room_id;
-    const quantity = parseInt(req.params.quantity);
+    const quantity = parseInt(req.query.quantity);
 
     const cart = await Cart.findOne({
         _id: cartId,
