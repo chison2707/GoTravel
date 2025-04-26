@@ -423,47 +423,87 @@ module.exports.deleteHotel = async (req, res) => {
     });
 }
 
-// [PATCH] /api/v1/carts/update/:tour_id/:quantity
+// [PATCH] /api/v1/carts/update/:tour_id?timeDepart=?quantity=
 module.exports.update = async (req, res) => {
-    const cartId = req.cart.id;
     const tourId = req.params.tour_id;
-    const quantity = parseInt(req.params.quantity);
+    const quantity = req.query.quantity;
+    const cartId = req.cart.id;
+    const timeDepart = new Date(req.query.timeDepart);
+
+
+    if (!quantity || quantity <= 0 || new Date(timeDepart) < Date.now()) {
+        return res.status(400).json({
+            code: 400,
+            message: "Số lượng hoặc thời gian khởi hành không hợp lệ"
+        });
+    }
 
     const cart = await Cart.findOne({
-        _id: cartId,
-        "tours.tour_id": tourId
+        _id: cartId
     });
+    const tour = await Tour.findOne({ _id: tourId });
 
-    if (!cart) {
+    if (!tour) {
         return res.json({
-            code: 400,
-            message: "Giỏ hàng không tồn tại hoặc tour không có trong giỏ hàng"
-        });
-    }
-    const tour = await Tour.findOne({
-        _id: tourId
-    });
-    if (quantity < 1 || quantity > tour.stock) {
-        return res.json({
-            code: 400,
-            message: "Số lượng tour không hợp lệ"
+            code: 404,
+            message: "Không tìm thấy tour"
         });
     }
 
-    const data = await Cart.findOneAndUpdate({
-        _id: cartId,
-        "tours.tour_id": tourId
-    }, {
-        $set: {
-            "tours.$.quantity": quantity
-        }
-    }, { new: true });
+    const tourTime = tour.timeStarts.find(item =>
+        new Date(item.timeDepart).getTime() === new Date(timeDepart).getTime() &&
+        new Date(item.timeDepart) >= Date.now()
+    );
 
-    res.json({
-        code: 200,
-        message: "Cập nhật số lượng giỏ hàng thành công",
-        data: data
+    if (!tourTime) {
+        return res.json({
+            code: 400,
+            message: "Thời gian khởi hành không hợp lệ"
+        });
+    }
+    if (quantity > tourTime.stock) {
+        return res.json({
+            code: 400,
+            message: "Số lượng tour vượt quá số lượng còn lại"
+        });
+    }
+
+    const existTourInCart = cart.tours.find(item => {
+        const matchingTime = item.timeStarts.find(t =>
+            new Date(t.timeDepart).getTime() === new Date(timeDepart).getTime()
+        );
+        return item.tour_id.toString() === tourId && matchingTime;
     });
+
+    let updatedCart;
+
+    if (existTourInCart) {
+        updatedCart = await Cart.findOneAndUpdate(
+            {
+                _id: cartId,
+                "tours.tour_id": tourId,
+                "tours.timeStarts.timeDepart": new Date(timeDepart)
+            },
+            {
+                $set: {
+                    "tours.$[tour].timeStarts.$[time].stock": quantity
+                }
+            },
+            {
+                arrayFilters: [
+                    { "tour.tour_id": tourId },
+                    { "time.timeDepart": new Date(timeDepart) }
+                ],
+                new: true
+            }
+        );
+
+        return res.json({
+            code: 200,
+            message: "Thêm tour vào giỏ hàng thành công",
+            data: updatedCart
+        });
+    }
 }
 
 // [PATCH] /api/v1/carts/updateRoom/:hotel_id/:room_id/:quantity
