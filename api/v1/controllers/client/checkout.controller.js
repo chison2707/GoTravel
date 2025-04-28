@@ -12,96 +12,87 @@ const moment = require("moment");
 
 //[GET] api/v1/checkout
 module.exports.index = async (req, res) => {
-    try {
-        const userId = req.user._id;
+    const userId = req.user._id;
 
-        const cart = await Cart.findOne({ user_id: userId }).lean();
-        if (!cart || (!cart.tours.length && !cart.hotels.length)) {
-            return res.json({
-                _id: null,
-                user_id: userId,
-                tours: [],
-                hotels: [],
-                totalPrice: 0
-            });
-        }
+    const cart = await Cart.findOne({ user_id: userId });
 
-        let totalPrice = 0;
-
-        // ===== Xử lý Tours =====
-        const tourIds = cart.tours.map(item => item.tour_id);
-        const tours = await Tour.find({ _id: { $in: tourIds } }).lean();
-
-        const processedTours = cart.tours.map(item => {
-            const tourInfo = tours.find(t => t._id.toString() === item.tour_id.toString());
-            if (!tourInfo) return null;
-
-            const priceNew = tourHelper.priceNewTour(tourInfo);
-            const total = item.quantity * priceNew;
-            totalPrice += total;
-
-            return {
-                tour_id: item.tour_id,
-                quantity: item.quantity,
-                tourInfo,
-                priceNew,
-                totalPrice: total
-            };
-        }).filter(Boolean);
-
-        // ===== Xử lý Hotels =====
-        const hotelIds = cart.hotels.map(h => h.hotel_id);
-        const hotels = await Hotel.find({ _id: { $in: hotelIds } }).lean();
-
-        const processedHotels = [];
-
-        for (const hotelCart of cart.hotels) {
-            const hotelInfo = hotels.find(h => h._id.toString() === hotelCart.hotel_id.toString());
-            if (!hotelInfo) continue;
-
-            // ===== Xử lý Rooms =====
-            const processedRooms = [];
-
-            for (const roomCart of hotelCart.rooms) {
-                const roomInfo = await Room.findOne({
-                    _id: roomCart.room_id
-                });
-                if (!roomInfo) continue;
-
-                const price = roomInfo.price;
-                const total = roomCart.quantity * price;
-                totalPrice += total;
-
-                processedRooms.push({
-                    room_id: roomCart.room_id,
-                    quantity: roomCart.quantity,
-                    roomInfo,
-                    price,
-                    totalPrice: total
-                });
-            }
-
-            processedHotels.push({
-                hotel_id: hotelCart.hotel_id,
-                hotelInfo,
-                rooms: processedRooms
-            });
-        }
-
-        res.json({
-            _id: cart._id,
-            user_id: cart.user_id,
-            tours: processedTours,
-            hotels: processedHotels,
-            totalPrice
-        });
-    } catch (error) {
-        console.error(error);
-        res.json({
-            code: "500",
-            message: "Lỗi khi xử lý giỏ hàng: " + error.message
+    if (!cart) {
+        return res.json({
+            code: 400,
+            message: "Giỏ hàng không tồn tại"
         });
     }
+
+    const processedCart = {
+        _id: cart._id,
+        user_id: cart.user_id,
+        tours: [],
+        hotels: [],
+        totalPrice: 0
+    };
+
+    // Xử lý tour
+    for (const item of cart.tours) {
+        const tourInfo = await Tour.findById(item.tour_id).select("-timeStarts");
+        if (!tourInfo) continue;
+
+        const priceNew = tourHelper.priceNewTour(tourInfo);
+        const tourProcessed = {
+            tour_id: item.tour_id,
+            tourInfo,
+            priceNew,
+            timeStarts: []
+        };
+        for (const timeStart of item.timeStarts) {
+            const totalPrice = timeStart.stock * parseInt(priceNew);
+
+            tourProcessed.timeStarts.push({
+                timeDepart: timeStart.timeDepart,
+                quantity: timeStart.quantity,
+                totalPrice: totalPrice
+            })
+            processedCart.totalPrice += totalPrice;
+        }
+
+        if (tourProcessed.timeStarts.length > 0) {
+            processedCart.tours.push(tourProcessed);
+        }
+    }
+
+    // Xử lý hotels & rooms
+    for (const hotelItem of cart.hotels) {
+        const hotelInfo = await Hotel.findById(hotelItem.hotel_id);
+        if (!hotelInfo) continue;
+
+        const hotelProcessed = {
+            hotel_id: hotelItem.hotel_id,
+            hotelInfo,
+            rooms: []
+        };
+
+        for (const roomItem of hotelItem.rooms) {
+            const roomInfo = await Room.findById(roomItem.room_id);
+            if (!roomInfo) continue;
+
+            const total = roomItem.quantity * roomInfo.price;
+
+            hotelProcessed.rooms.push({
+                room_id: roomItem.room_id,
+                roomInfo,
+                quantity: roomItem.quantity,
+                price: roomInfo.price,
+                totalPrice: total
+            });
+
+            processedCart.totalPrice += total;
+        }
+
+        if (hotelProcessed.rooms.length > 0) {
+            processedCart.hotels.push(hotelProcessed);
+        }
+    }
+
+    res.json(processedCart);
 };
 
 
@@ -132,31 +123,58 @@ module.exports.order = async (req, res) => {
             _id: tour.tour_id
         });
 
-        if (!tourInfo || tourInfo.stock < tour.quantity) {
+        if (!tourInfo) {
             return res.json({
                 code: "400",
-                message: "Tour không tồn tại! hoặc số lượng tour hiện tại không đủ!"
+                message: "Tour không tồn tại!"
             });
         }
         const priceNew = tourHelper.priceNewTour(tourInfo);
-        const itemTotal = tour.quantity * priceNew;
+
+        const timeStarts = [];
+        for (const timeStart of tour.timeStarts) {
+            const tourTime = tour.timeStarts.find(item =>
+                new Date(item.timeDepart).getTime() === new Date(timeStart.timeDepart).getTime() &&
+                new Date(timeStart.timeDepart) >= Date.now()
+            );
+
+            if (!tourTime) {
+                return res.json({
+                    code: "400",
+                    message: "Thời gian khởi hành tour không hợp lệ! hoặc đã quá ngày!"
+                });
+            }
+
+            const itemTotal = timeStart.stock * priceNew;
+
+            timeStarts.push({
+                timeDepart: new Date(timeStart.timeDepart),
+                stock: timeStart.stock
+            });
+
+            totalPrice += itemTotal;
+
+            await Tour.updateOne(
+                {
+                    _id: tour.tour_id,
+                    "timeStarts.timeDepart": new Date(timeStart.timeDepart)
+                },
+                {
+                    $inc: {
+                        sold: timeStart.stock,
+                        "timeStarts.$[time].stock": -timeStart.stock
+                    }
+                }, {
+                arrayFilters: [{ "time.timeDepart": new Date(timeStart.timeDepart) }]
+            });
+        }
 
         tours.push({
             tour_id: tour.tour_id,
             price: tourInfo.price,
             discount: tourInfo.discount,
-            quantity: tour.quantity
+            timeStarts: timeStarts,
         });
-        totalPrice += itemTotal;
-
-        await Tour.updateOne(
-            { _id: tour.tour_id },
-            {
-                $inc: {
-                    sold: tour.quantity,
-                    stock: -tour.quantity
-                }
-            });
     }
 
     // xử lý hotel

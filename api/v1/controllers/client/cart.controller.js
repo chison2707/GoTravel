@@ -291,15 +291,6 @@ module.exports.index = async (req, res) => {
         if (tourProcessed.timeStarts.length > 0) {
             processedCart.tours.push(tourProcessed);
         }
-
-        // processedCart.tours.push({
-        //     tour_id: item.tour_id,
-        //     quantity: item.quantity,
-        //     tourInfo,
-        //     priceNew,
-        //     totalPrice
-        // });
-
     }
 
     // Xử lý hotels & rooms

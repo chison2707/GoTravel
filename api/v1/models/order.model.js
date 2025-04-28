@@ -17,7 +17,12 @@ const orderSchema = new mongoose.Schema({
             tour_id: String,
             price: Number,
             discount: Number,
-            quantity: Number
+            timeStarts: [
+                {
+                    timeDepart: Date,
+                    stock: Number,
+                }
+            ]
         }
     ],
     hotels: [
