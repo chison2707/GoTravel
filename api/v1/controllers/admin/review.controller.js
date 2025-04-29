@@ -12,8 +12,7 @@ module.exports.indexHotel = async (req, res) => {
     } else {
         const hotelId = req.params.hotelId;
         let find = {
-            hotel_id: hotelId,
-            deleted: false
+            hotel_id: hotelId
         };
 
         // sort
@@ -53,8 +52,7 @@ module.exports.indexRoom = async (req, res) => {
         const roomId = req.params.roomId;
         let find = {
             hotel_id: hotelId,
-            room_id: roomId,
-            deleted: false
+            room_id: roomId
         };
 
         // sort
