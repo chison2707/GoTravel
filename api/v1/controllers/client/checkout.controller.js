@@ -315,6 +315,14 @@ module.exports.createPayment = async (req, res) => {
         }
 
         const order = await Order.findById(orderId);
+
+        if (req.user.id !== order.user_id) {
+            return res.json({
+                code: 400,
+                message: "Bạn không có quyền truy cập vào đơn hàng này!"
+            });
+        }
+
         if (!order) {
             return res.json({
                 error: "400",
@@ -400,5 +408,132 @@ module.exports.paymentCallback = async (req, res) => {
         code: 200,
         message: 'Thanh toán thành công',
         order: order
+    });
+};
+
+// [PATCH] api/v1/checkout/cancel/:orderId
+module.exports.cancel = async (req, res) => {
+    const orderId = req.params.orderId;
+    const order = await Order.findById(orderId);
+
+    if (req.user.id !== order.user_id) {
+        return res.json({
+            code: 400,
+            message: "Bạn không có quyền hủy đơn hàng này!"
+        });
+    }
+
+    if (!order) {
+        return res.json({
+            code: 400,
+            message: "Không tìm thấy đơn hàng!"
+        });
+    }
+
+    const now = new Date();
+    const updatedAt = new Date(order.updatedAt);
+
+    updatedAt.setDate(updatedAt.getDate() + 2);
+
+    if (now > updatedAt) {
+        return res.json({
+            code: 400,
+            message: 'Không thể hủy đơn hàng sau 2 ngày kể từ khi đặt'
+        });
+    }
+
+    // Kiểm tra thời gian khởi hành tour (dưới 3 ngày)
+    const checkDayTour = new Date(now);
+    checkDayTour.setDate(checkDayTour.getDate() + 3);
+    const hasNearDepartTour = order.tours.some(tour =>
+        tour.timeStarts.some(time => new Date(time.timeDepart) <= checkDayTour)
+    );
+    if (hasNearDepartTour) {
+        return res.json({
+            code: 400,
+            message: 'Không thể hủy tour khi trước ngày khởi hành còn dưới 3 ngày'
+        });
+    }
+
+    order.status = 'cancelled';
+    order.inforCancel.numberAccount = req.body.numberAccount;
+    order.inforCancel.bankName = req.body.bankName;
+
+    // tours
+    for (const tour of order.tours) {
+        for (const timeStart of tour.timeStarts) {
+            await Tour.updateOne(
+                {
+                    _id: tour.tour_id,
+                    "timeStarts.timeDepart": new Date(timeStart.timeDepart)
+                },
+                {
+                    $inc: {
+                        sold: -timeStart.stock,
+                        "timeStarts.$[time].stock": timeStart.stock
+                    }
+                },
+                { arrayFilters: [{ "time.timeDepart": new Date(timeStart.timeDepart) }] }
+            );
+        }
+    }
+
+    // hotels
+    for (const hotel of order.hotels) {
+        for (const room of hotel.rooms) {
+            await Room.updateOne(
+                { _id: room.room_id },
+                {
+                    $inc: {
+                        sold: -room.quantity,
+                        availableRooms: room.quantity
+                    }
+                }
+            );
+
+            await Hotel.updateOne(
+                { _id: hotel.hotel_id },
+                {
+                    $inc: {
+                        sold: -room.quantity,
+                    }
+                }
+            );
+        }
+    }
+
+
+    // gửi mail xác nhận đã hủy đơn hàng qua email user
+    const subject = `Xác nhận đã hủy đơn hàng thành công!`;
+    const html = `
+            <p>Xin chào <strong>${req.user.fullName}</strong>,</p>
+            <p>
+            Đơn hàng <strong>${order.orderCode}</strong> của bạn đã được hủy thành công.<br>
+             Chúng tôi sẽ hoàn tiền lại trong vòng 24h!
+            </p>
+            <p>
+            Nếu có bất kỳ thắc mắc nào, bạn vui lòng liên hệ với chúng tôi qua số điện thoại 
+            <strong>${req.settingGeneral.phone}</strong> hoặc email <strong>${req.settingGeneral.email}</strong>.
+            </p>
+            <p>Chúng tôi rất mong sẽ có cơ hội đồng hành cùng bạn trong những chuyến đi tiếp theo!</p>
+            <p>Trân trọng,<br>
+            <strong>${req.settingGeneral.websiteName}</strong></p>
+        `;
+
+    sendMailHelper.sendMail(req.user.email, subject, html);
+
+    await order.save();
+
+    return res.json({
+        code: 200,
+        message: 'Hủy đơn hàng thành công',
+        order: {
+            _id: order._id,
+            orderCode: order.orderCode,
+            status: order.status,
+            updatedAt: order.updatedAt,
+            numberAccount: req.body.numberAccount,
+            bankName: req.body.bankName
+        },
     });
 };

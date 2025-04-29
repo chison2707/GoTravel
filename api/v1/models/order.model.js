@@ -47,6 +47,10 @@ const orderSchema = new mongoose.Schema({
         }
     ],
     paymentInfo: Object,
+    inforCancel: {
+        numberAccount: String,
+        bankName: String
+    }
 }, {
     timestamps: true
 });
