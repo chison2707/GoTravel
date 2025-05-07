@@ -42,7 +42,10 @@ module.exports.index = async (req, res) => {
         toursObject.forEach(item => {
             item.price_special = tourHelper.priceNewTour(item);
         });
-        res.json(toursObject);
+        res.json({
+            toursObject: toursObject,
+            totalPage: objPagination.totalPage
+        });
     }
 };
 
