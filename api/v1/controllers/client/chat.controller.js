@@ -39,10 +39,9 @@ module.exports.getChatResponse = async (req, res) => {
         const messages = [
             {
                 role: "system",
-                content: `Bạn là một trợ lý du lịch. Hôm nay là tháng ${month}/${year}. 
-                Hãy cung cấp thông tin hữu ích về các điểm du lịch, 
-                lịch trình và mẹo du lịch chỉ những thông tin tôi cấp và không được đem những thông tin bên ngoài nhé.\n${suggestedTours}
-                Không đề cập đến bất kỳ thương hiệu hay website nào.`
+                content: `Bạn là trợ lý du lịch. Tháng ${month}/${year}. 
+                Chỉ sử dụng thông tin tôi cung cấp để gợi ý điểm đến, lịch trình và mẹo du lịch. Trả lời thật ngắn gọn và súc tích.
+                Không lấy thông tin bên ngoài, không nhắc đến thương hiệu hay website.\n${suggestedTours}`
             },
             ...chat.history,
         ];
