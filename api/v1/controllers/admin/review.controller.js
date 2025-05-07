@@ -26,7 +26,7 @@ module.exports.indexHotel = async (req, res) => {
         let objPagination = paginationHelper(
             {
                 currentPage: 1,
-                limitItems: 5
+                limitItems: 10
             },
             req.query,
             countRecords
@@ -66,7 +66,7 @@ module.exports.indexRoom = async (req, res) => {
         let objPagination = paginationHelper(
             {
                 currentPage: 1,
-                limitItems: 5
+                limitItems: 10
             },
             req.query,
             countRecords
