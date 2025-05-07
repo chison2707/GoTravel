@@ -35,7 +35,10 @@ module.exports.indexHotel = async (req, res) => {
 
         const reviews = await Review.find(find).sort(sort).limit(objPagination.limitItems).skip(objPagination.skip);
 
-        res.json(reviews);
+        res.json({
+            reviews: reviews,
+            totalPage: objPagination.totalPage
+        });
     }
 };
 
@@ -75,7 +78,10 @@ module.exports.indexRoom = async (req, res) => {
 
         const reviews = await Review.find(find).sort(sort).limit(objPagination.limitItems).skip(objPagination.skip);
 
-        res.json(reviews);
+        res.json({
+            reviews: reviews,
+            totalPage: objPagination.totalPage
+        });
     }
 };
 

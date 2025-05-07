@@ -32,7 +32,10 @@ module.exports.index = async (req, res) => {
 
         const vouchers = await Voucher.find(find).sort(sort).limit(objPagination.limitItems).skip(objPagination.skip);
 
-        res.json(vouchers);
+        res.json({
+            vouchers: vouchers,
+            totalPage: objPagination.totalPage
+        });
     }
 };
 

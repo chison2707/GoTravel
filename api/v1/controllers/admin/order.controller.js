@@ -40,7 +40,10 @@ module.exports.index = async (req, res) => {
 
         const orders = await Order.find(find).sort(sort).limit(objPagination.limitItems).skip(objPagination.skip);
 
-        res.json(orders);
+        res.json({
+            orders: orders,
+            totalPage: objPagination.totalPage
+        });
     }
 };
 

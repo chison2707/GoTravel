@@ -36,7 +36,10 @@ module.exports.index = async (req, res) => {
 
         const categories = await Category.find(find).sort(sort).limit(objPagination.limitItems).skip(objPagination.skip);
 
-        res.json(categories);
+        res.json({
+            categories: categories,
+            totalPage: objPagination.totalPage
+        });
     }
 };
 

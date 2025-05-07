@@ -36,7 +36,10 @@ module.exports.index = async (req, res) => {
 
         const accounts = await User.find(find).sort(sort).limit(objPagination.limitItems).skip(objPagination.skip).select("-password");
 
-        res.json(accounts);
+        res.json({
+            users: accounts,
+            totalPage: objPagination.totalPage
+        });
     }
 };
 
