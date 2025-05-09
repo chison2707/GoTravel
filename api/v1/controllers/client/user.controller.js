@@ -229,3 +229,43 @@ module.exports.edit = async (req, res) => {
         });
     }
 };
+
+// [PATCH]/api/v1/users/password/change
+module.exports.changePass = async (req, res) => {
+    try {
+        const token = req.user.token;
+        const password = req.body.password;
+        const newPassword = req.body.newPassword;
+        const confirmNewPassword = req.body.confirmNewPassword;
+
+
+        const user = await User.findOne({
+            token: token
+        });
+
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.json({
+                code: 400,
+                message: "Mật khẩu không đúng"
+            });
+        }
+        const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+        await User.updateOne({
+            token: token
+        }, {
+            password: hashedPassword
+        });
+
+        return res.json({
+            code: 200,
+            message: "Đặt lại mật khẩu thành công"
+        });
+
+    } catch (error) {
+        return res.json({
+            code: 500,
+            message: "Có lỗi xảy ra" + error.message,
+        });
+    }
+};
