@@ -110,3 +110,17 @@ module.exports.changePassword = (req, res, next) => {
     }
     next();
 }
+
+module.exports.edit = (req, res, next) => {
+    const errors = [];
+    if (req.body.email) {
+        errors.push('Không được chỉnh sửa email!');
+    }
+    if (errors.length > 0) {
+        return res.status(400).json({
+            success: false,
+            errors: errors
+        });
+    }
+    next();
+}

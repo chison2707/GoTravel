@@ -8,6 +8,7 @@ const chatRoute = require("./chat.route");
 const hotelRoute = require("./hotel.route");
 const searchRoute = require("./search.route");
 const reviewRoute = require("./review.route");
+const feedbackRoute = require("./feedback.route");
 
 const settingGeneralMiddleware = require("../../middlewares/client/setting.middleware");
 
@@ -27,4 +28,5 @@ module.exports = (app) => {
     app.use(version + '/hotels', hotelRoute);
     app.use(version + '/search', searchRoute);
     app.use(version + '/reviews', reviewRoute);
+    app.use(version + '/feedbacks', feedbackRoute);
 }
