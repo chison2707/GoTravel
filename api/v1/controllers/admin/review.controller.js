@@ -15,6 +15,14 @@ module.exports.indexHotel = async (req, res) => {
             hotel_id: hotelId
         };
 
+        // Search
+        if (req.query.search) {
+            const searchRegex = new RegExp(req.query.search, 'i');
+            find.$or = [
+                { comment: searchRegex }
+            ];
+        }
+
         // sort
         const sort = {};
         if (req.query.sortKey && req.query.sortValue) {
@@ -57,6 +65,14 @@ module.exports.indexRoom = async (req, res) => {
             hotel_id: hotelId,
             room_id: roomId
         };
+
+        // Search
+        if (req.query.search) {
+            const searchRegex = new RegExp(req.query.search, 'i');
+            find.$or = [
+                { comment: searchRegex }
+            ];
+        }
 
         // sort
         const sort = {};
