@@ -1,5 +1,6 @@
 const Category = require("../../models/category.model");
 const paginationHelper = require("../../helper/pagination");
+const { convertToSlug } = require("../../helper/convertToSlug");
 
 // [GET]/api/v1/admin/categories
 module.exports.index = async (req, res) => {
@@ -12,15 +13,15 @@ module.exports.index = async (req, res) => {
     } else {
         let find = { deleted: false };
 
+        // Search
         if (req.query.search) {
-            const normalizedSearch = req.query.search
-                .normalize("NFD")
-                .replace(/[\u0300-\u036f]/g, "");
-            const searchRegex = new RegExp(req.query.search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
-            const normalizedRegex = new RegExp(normalizedSearch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+            const keywordRegex = new RegExp(req.query.search, "i");
+
+            const stringSlug = convertToSlug(req.query.search);
+            const stringSlugRegex = new RegExp(stringSlug, "i");
             find.$or = [
-                { title: { $regex: searchRegex } },
-                { title: { $regex: normalizedRegex } }
+                { title: keywordRegex },
+                { slug: stringSlugRegex }
             ];
         }
 

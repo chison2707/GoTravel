@@ -12,16 +12,12 @@ module.exports.index = async (req, res) => {
     } else {
         let find = { deleted: false };
 
+        // Search
         if (req.query.search) {
-            const normalizedSearch = req.query.search
-                .normalize("NFD")
-                .replace(/[\u0300-\u036f]/g, "");
-            const searchRegex = new RegExp(req.query.search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
-            const normalizedRegex = new RegExp(normalizedSearch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+            const searchRegex = new RegExp(req.query.search, 'i');
             find.$or = [
-                { title: { $regex: searchRegex } },
-                { code: { $regex: searchRegex } },
-                { title: { $regex: normalizedRegex } }
+                { title: searchRegex },
+                { code: searchRegex }
             ];
         }
 
