@@ -12,6 +12,15 @@ module.exports.index = async (req, res) => {
     } else {
         let find = { deleted: false };
 
+        // Search
+        if (req.query.search) {
+            const searchRegex = new RegExp(req.query.search, 'i');
+            find.$or = [
+                { title: searchRegex },
+                { code: searchRegex }
+            ];
+        }
+
         // sort
         const sort = {};
         if (req.query.sortKey && req.query.sortValue) {

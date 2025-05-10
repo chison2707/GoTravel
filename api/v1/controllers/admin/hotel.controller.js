@@ -14,6 +14,14 @@ module.exports.index = async (req, res) => {
         try {
             let find = { deleted: false };
 
+            // Search
+            if (req.query.search) {
+                const searchRegex = new RegExp(req.query.search, 'i');
+                find.$or = [
+                    { name: searchRegex }
+                ];
+            }
+
             if (req.query.status) {
                 find.status = req.query.status;
             };
