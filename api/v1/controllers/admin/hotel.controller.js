@@ -14,11 +14,15 @@ module.exports.index = async (req, res) => {
         try {
             let find = { deleted: false };
 
-            // Search
             if (req.query.search) {
-                const searchRegex = new RegExp(req.query.search, 'i');
+                const normalizedSearch = req.query.search
+                    .normalize("NFD")
+                    .replace(/[\u0300-\u036f]/g, "");
+                const searchRegex = new RegExp(req.query.search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+                const normalizedRegex = new RegExp(normalizedSearch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
                 find.$or = [
-                    { name: searchRegex }
+                    { name: { $regex: searchRegex } },
+                    { name: { $regex: normalizedRegex } }
                 ];
             }
 
