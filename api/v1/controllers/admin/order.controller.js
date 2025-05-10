@@ -16,6 +16,15 @@ module.exports.index = async (req, res) => {
     } else {
         let find = {};
 
+        // Search
+        if (req.query.search) {
+            const searchRegex = new RegExp(req.query.search, 'i');
+            find.$or = [
+                { orderCode: searchRegex }
+            ];
+        }
+
+
         if (req.query.status) {
             find.status = req.query.status;
         };
