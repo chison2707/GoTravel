@@ -8,7 +8,7 @@ const Tour = require("../../models/tour.model");
 const User = require("../../models/user.model");
 const Voucher = require("../../models/voucher.model");
 
-// [GET]/api/v1/admin/accounts
+// [GET]/api/v1/admin/dashboard
 module.exports.dashboard = async (req, res) => {
     const statistic = {
         category: {
