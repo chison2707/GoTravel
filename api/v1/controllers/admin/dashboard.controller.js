@@ -123,15 +123,28 @@ module.exports.dashboard = async (req, res) => {
 
     let revenueToday = 0;
     let quatityTourToday = 0;
-    // let quatityHotel = 0;
+    let quatityRoomToday = 0;
 
     for (const item of revenue) {
         revenueToday += item.totalPrice;
-        quatityTourToday += item.tours.length || 0;
+        if (item.tours.length > 0) {
+            for (const tour of item.tours) {
+                for (const time of tour.timeStarts) {
+                    quatityTourToday += time.stock || 0;
+                }
+            }
+        }
+        if (item.hotels.length > 0) {
+            for (const hotel of item.hotels) {
+                for (const room of hotel.rooms) {
+                    quatityRoomToday += room.quantity || 0;
+                }
+            }
+        }
     }
 
-
     orther.quatityTourToday = quatityTourToday;
+    orther.quatityRoomToday = quatityRoomToday;
     orther.revenueToday = revenueToday;
     orther.usersToday = usersToday;
     orther.fiveOrder = fiveOrder;
