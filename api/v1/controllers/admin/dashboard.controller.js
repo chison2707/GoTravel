@@ -113,6 +113,20 @@ module.exports.dashboard = async (req, res) => {
 
     const fiveOrder = await Order.find({ status: 'paid' }).sort({ updatedAt: 'desc' }).limit(5);
 
+    const revenue = await Order.find({
+        status: 'paid',
+        updatedAt: {
+            $gte: new Date(today.setHours(0, 0, 0, 0)),
+            $lte: new Date(today.setHours(23, 59, 59, 999))
+        }
+    });
+
+    let revenueToday = 0;
+    for (const item of revenue) {
+        revenueToday += item.totalPrice;
+    }
+
+    orther.revenueToday = revenueToday;
     orther.usersToday = usersToday;
     orther.fiveOrder = fiveOrder;
 
