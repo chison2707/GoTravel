@@ -100,8 +100,18 @@ module.exports.dashboard = async (req, res) => {
     statistic.user.active = await User.countDocuments({ status: "active" });
     statistic.user.inactive = await User.countDocuments({ status: "inactive" });
 
+    const today = new Date();
+    const usersToday = await User.find({
+        createdAt: {
+            $gte: new Date(today.setHours(0, 0, 0, 0)),
+            $lte: new Date(today.setHours(23, 59, 59, 999))
+        },
+        deleted: false
+    });
+
     res.json({
         code: 200,
-        statistic
+        statistic,
+        usersToday
     })
 }
