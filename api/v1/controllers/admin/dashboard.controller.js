@@ -172,14 +172,51 @@ module.exports.dashboard = async (req, res) => {
         }
     }
 
+    const ordersThisYear = await Order.find({
+        status: 'paid',
+        updatedAt: {
+            $gte: new Date(today.getFullYear(), 0, 1, 0, 0, 0, 0),
+            $lte: new Date(today.getFullYear(), 11, 31, 23, 59, 59, 999)
+        }
+    });
+    let totalRevenueYear = 0;
+    let quatityTourYear = 0;
+    let quatityRoomYear = 0;
+    for (const order of ordersThisYear) {
+        totalRevenueYear += order.totalPrice;
+        if (order.tours.length > 0) {
+            for (const tour of order.tours) {
+                for (const time of tour.timeStarts) {
+                    quatityTourYear += time.stock || 0;
+                }
+            }
+        }
+        if (order.hotels.length > 0) {
+            for (const hotel of order.hotels) {
+                for (const room of hotel.rooms) {
+                    quatityRoomYear += room.quantity || 0;
+                }
+            }
+        }
+    }
+
+    // year
+    orther.ordersThisYear = ordersThisYear;
+    orther.totalRevenueYear = totalRevenueYear;
+    orther.quatityTourYear = quatityTourYear;
+    orther.quatityRoomYear = quatityRoomYear;
+
+    // month
     orther.ordersThisMonth = ordersThisMonth;
     orther.totalRevenueThisMonth = totalRevenueThisMonth;
     orther.quatityTourMonth = quatityTourMonth;
     orther.quatityRoomMonth = quatityRoomMonth;
 
+    // day
     orther.quatityTourToday = quatityTourToday;
     orther.quatityRoomToday = quatityRoomToday;
     orther.revenueToday = revenueToday;
+
     orther.usersToday = usersToday;
     orther.fiveOrder = fiveOrder;
 
