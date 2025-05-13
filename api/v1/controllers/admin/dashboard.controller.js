@@ -143,11 +143,46 @@ module.exports.dashboard = async (req, res) => {
         }
     }
 
+    const ordersThisMonth = await Order.find({
+        status: 'paid',
+        updatedAt: {
+            $gte: new Date(today.getFullYear(), today.getMonth(), 1),
+            $lte: new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59, 999)
+        }
+    });
+
+    let totalRevenueThisMonth = 0;
+    let quatityTourMonth = 0;
+    let quatityRoomMonth = 0;
+    for (const order of ordersThisMonth) {
+        totalRevenueThisMonth += order.totalPrice;
+        if (order.tours.length > 0) {
+            for (const tour of order.tours) {
+                for (const time of tour.timeStarts) {
+                    quatityTourMonth += time.stock || 0;
+                }
+            }
+        }
+        if (order.hotels.length > 0) {
+            for (const hotel of order.hotels) {
+                for (const room of hotel.rooms) {
+                    quatityRoomMonth += room.quantity || 0;
+                }
+            }
+        }
+    }
+
+    orther.ordersThisMonth = ordersThisMonth;
+    orther.totalRevenueThisMonth = totalRevenueThisMonth;
+    orther.quatityTourMonth = quatityTourMonth;
+    orther.quatityRoomMonth = quatityRoomMonth;
+
     orther.quatityTourToday = quatityTourToday;
     orther.quatityRoomToday = quatityRoomToday;
     orther.revenueToday = revenueToday;
     orther.usersToday = usersToday;
     orther.fiveOrder = fiveOrder;
+
 
     res.json({
         code: 200,
