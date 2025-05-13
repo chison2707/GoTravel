@@ -61,6 +61,8 @@ module.exports.dashboard = async (req, res) => {
         },
     };
 
+    const orther = {}
+
     statistic.category.total = await Category.countDocuments({ deleted: false });
     statistic.category.active = await Category.countDocuments({ status: "active", deleted: false });
     statistic.category.inactive = await Category.countDocuments({ status: "inactive", deleted: false });
@@ -109,9 +111,14 @@ module.exports.dashboard = async (req, res) => {
         deleted: false
     });
 
+    const fiveOrder = await Order.find({ status: 'paid' }).sort({ updatedAt: 'desc' }).limit(5);
+
+    orther.usersToday = usersToday;
+    orther.fiveOrder = fiveOrder;
+
     res.json({
         code: 200,
         statistic,
-        usersToday
+        orther,
     })
 }
