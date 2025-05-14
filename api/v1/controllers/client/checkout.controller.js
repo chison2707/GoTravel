@@ -99,7 +99,7 @@ module.exports.index = async (req, res) => {
 //[POST] api/v1/checkout/order
 module.exports.order = async (req, res) => {
     const cartId = req.cart.id;
-    const { fullName, phone, note, voucherCode } = req.body;
+    const { fullName, phone, email, note, voucherCode } = req.body;
 
     const user_id = req.user.id;
 
@@ -278,7 +278,7 @@ module.exports.order = async (req, res) => {
     const newOrder = new Order({
         orderCode: code,
         user_id: user_id,
-        userInfor: { fullName, phone, note },
+        userInfor: { fullName, phone, email, note },
         status: "pending",
         tours,
         hotels,
@@ -343,7 +343,6 @@ module.exports.createPayment = async (req, res) => {
             vnp_Locale: "vn",
             vnp_CreateDate: now.format("YYYYMMDDHHmmss"),
             vnp_ExpireDate: expire.format("YYYYMMDDHHmmss"),
-            email: req.user.email
         });
 
         res.json({ paymentUrl });
@@ -402,7 +401,7 @@ module.exports.paymentCallback = async (req, res) => {
         <p>Thân mến,<br>
         <strong>${req.settingGeneral.websiteName}</strong></p>`;
 
-    sendMailHelper.sendMail(req.query.email, subject, html);
+    sendMailHelper.sendMail(order.userInfor.email, subject, html);
 
 
     return res.json({
