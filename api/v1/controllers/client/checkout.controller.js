@@ -99,7 +99,7 @@ module.exports.index = async (req, res) => {
 //[POST] api/v1/checkout/order
 module.exports.order = async (req, res) => {
     const cartId = req.cart.id;
-    const { fullName, phone, note, voucherCode } = req.body;
+    const { fullName, phone, note, email, voucherCode } = req.body;
 
     const user_id = req.user.id;
 
@@ -401,7 +401,7 @@ module.exports.paymentCallback = async (req, res) => {
         <p>Thân mến,<br>
         <strong>${req.settingGeneral.websiteName}</strong></p>`;
 
-    sendMailHelper.sendMail(req.user.email, subject, html);
+    sendMailHelper.sendMail(order.userInfor.email, subject, html);
 
 
     return res.json({
