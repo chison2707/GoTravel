@@ -506,7 +506,7 @@ module.exports.cancel = async (req, res) => {
     // gửi mail xác nhận đã hủy đơn hàng qua email user
     const subject = `Xác nhận đã hủy đơn hàng thành công!`;
     const html = `
-            <p>Xin chào <strong>${req.user.fullName}</strong>,</p>
+            <p>Xin chào <strong>${order.userInfor.fullName}</strong>,</p>
             <p>
             Đơn hàng <strong>${order.orderCode}</strong> của bạn đã được hủy thành công.<br>
              Chúng tôi sẽ hoàn tiền lại trong vòng 24h!
