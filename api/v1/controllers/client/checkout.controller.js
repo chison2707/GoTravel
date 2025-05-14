@@ -387,9 +387,9 @@ module.exports.paymentCallback = async (req, res) => {
         { new: true }
     );
     // gửi otp qua email user
-    const subject = `Cảm ơn ${req.user.fullName} đã tin tưởng dịch vụ của chúng tôi!`;
+    const subject = `Cảm ơn ${order.userInfor.fullName} đã tin tưởng dịch vụ của chúng tôi!`;
     const html = `
-        <p>Chào <strong>${req.user.fullName}</strong>,</p>
+        <p>Chào <strong>${order.userInfor.fullName}</strong>,</p>
         <p>
             Cảm ơn bạn đã đặt dịch vụ tại <strong>${req.settingGeneral.websiteName}</strong>!<br>
             Chúng tôi rất vui được bạn tin tưởng chọn dịch vụ của chúng tôi.
@@ -506,7 +506,7 @@ module.exports.cancel = async (req, res) => {
     // gửi mail xác nhận đã hủy đơn hàng qua email user
     const subject = `Xác nhận đã hủy đơn hàng thành công!`;
     const html = `
-            <p>Xin chào <strong>${order.userInfor.fullName}</strong>,</p>
+            <p>Xin chào <strong>${req.user.fullName}</strong>,</p>
             <p>
             Đơn hàng <strong>${order.orderCode}</strong> của bạn đã được hủy thành công.<br>
              Chúng tôi sẽ hoàn tiền lại trong vòng 24h!
