@@ -361,22 +361,13 @@ module.exports.paymentCallback = async (req, res) => {
     try {
         verify = vnpay.verifyReturnUrl(req.query);
         if (!verify.isVerified) {
-            return res.json({
-                code: 400,
-                message: 'Xác thực tính toàn vẹn dữ liệu thất bại'
-            });
+            return res.redirect(`/payment/failure?message=Xác thực tính toàn vẹn dữ liệu thất bại`);
         }
         if (!verify.isSuccess) {
-            return res.json({
-                code: 400,
-                message: 'Đơn hàng thanh toán thất bại'
-            });
+            return res.redirect(`/payment/failure?message=Đơn hàng thanh toán thất bại`);
         }
     } catch (error) {
-        return res.json({
-            code: 500,
-            message: 'Dữ liệu không hợp lệ'
-        });
+        return res.redirect(`/payment/failure?message=Dữ liệu không hợp lệ`);
     }
 
     // Kiểm tra thông tin đơn hàng và xử lý tương ứng
@@ -386,7 +377,12 @@ module.exports.paymentCallback = async (req, res) => {
         { status: "paid", paymentInfo: verify },
         { new: true }
     );
-    // gửi otp qua email user
+
+    if (!order) {
+        return res.redirect(`/payment/failure?message=Đơn hàng không tồn tại`);
+    }
+
+    // Gửi email xác nhận
     const subject = `Cảm ơn ${order.userInfor.fullName} đã tin tưởng dịch vụ của chúng tôi!`;
     const html = `
         <p>Chào <strong>${order.userInfor.fullName}</strong>,</p>
@@ -401,14 +397,10 @@ module.exports.paymentCallback = async (req, res) => {
         <p>Thân mến,<br>
         <strong>${req.settingGeneral.websiteName}</strong></p>`;
 
-    sendMailHelper.sendMail(order.userInfor.email, subject, html);
+    await sendMailHelper.sendMail(order.userInfor.email, subject, html);
 
-
-    return res.json({
-        code: 200,
-        message: 'Thanh toán thành công',
-        order: order
-    });
+    // Chuyển hướng đến trang thành công trên FE
+    return res.redirect(`/payment/success?orderCode=${order.orderCode}&email=${order.userInfor.email}`);
 };
 
 // [PATCH] api/v1/checkout/cancel/:orderId
