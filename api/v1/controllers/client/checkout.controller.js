@@ -361,13 +361,37 @@ module.exports.paymentCallback = async (req, res) => {
     try {
         verify = vnpay.verifyReturnUrl(req.query);
         if (!verify.isVerified) {
-            return res.redirect(`/payment/failure?message=Xác thực tính toàn vẹn dữ liệu thất bại`);
+            return res.send(`
+                <html>
+                    <body>
+                        <h1>Xác thực tính toàn vẹn dữ liệu thất bại</h1>
+                        <p>Vui lòng liên hệ hỗ trợ qua email: ${req.settingGeneral.email} hoặc số điện thoại: ${req.settingGeneral.phone}</p>
+                        <a href="/">Quay lại trang chủ</a>
+                    </body>
+                </html>
+            `);
         }
         if (!verify.isSuccess) {
-            return res.redirect(`/payment/failure?message=Đơn hàng thanh toán thất bại`);
+            return res.send(`
+                <html>
+                    <body>
+                        <h1>Đơn hàng thanh toán thất bại</h1>
+                        <p>Vui lòng thử lại hoặc liên hệ hỗ trợ qua email: ${req.settingGeneral.email} hoặc số điện thoại: ${req.settingGeneral.phone}</p>
+                        <a href="/">Quay lại trang chủ</a>
+                    </body>
+                </html>
+            `);
         }
     } catch (error) {
-        return res.redirect(`/payment/failure?message=Dữ liệu không hợp lệ`);
+        return res.send(`
+            <html>
+                <body>
+                    <h1>Dữ liệu không hợp lệ</h1>
+                    <p>Vui lòng liên hệ hỗ trợ qua email: ${req.settingGeneral.email} hoặc số điện thoại: ${req.settingGeneral.phone}</p>
+                    <a href="/">Quay lại trang chủ</a>
+                </body>
+            </html>
+        `);
     }
 
     // Kiểm tra thông tin đơn hàng và xử lý tương ứng
@@ -378,8 +402,17 @@ module.exports.paymentCallback = async (req, res) => {
         { new: true }
     );
 
+    // Kiểm tra order có tồn tại không
     if (!order) {
-        return res.redirect(`/payment/failure?message=Đơn hàng không tồn tại`);
+        return res.send(`
+            <html>
+                <body>
+                    <h1>Đơn hàng không tồn tại</h1>
+                    <p>Vui lòng liên hệ hỗ trợ qua email: ${req.settingGeneral.email} hoặc số điện thoại: ${req.settingGeneral.phone}</p>
+                    <a href="/">Quay lại trang chủ</a>
+                </body>
+            </html>
+        `);
     }
 
     // Gửi email xác nhận
@@ -399,8 +432,18 @@ module.exports.paymentCallback = async (req, res) => {
 
     await sendMailHelper.sendMail(order.userInfor.email, subject, html);
 
-    // Chuyển hướng đến trang thành công trên FE
-    return res.redirect(`/payment/success?orderCode=${order.orderCode}&email=${order.userInfor.email}`);
+    // Trả về trang HTML thành công
+    return res.send(`
+        <html>
+            <body>
+                <h1>Thanh toán thành công</h1>
+                <p>Cảm ơn bạn đã đặt hàng! Mã đơn hàng của bạn là: <strong>${order.orderCode}</strong></p>
+                <p>Chúng tôi đã gửi email xác nhận đến <strong>${order.userInfor.email}</strong>.</p>
+                <p>Mọi thắc mắc, vui lòng liên hệ qua email: ${req.settingGeneral.email} hoặc số điện thoại: ${req.settingGeneral.phone}</p>
+                <a href="/">Quay lại trang chủ</a>
+            </body>
+        </html>
+    `);
 };
 
 // [PATCH] api/v1/checkout/cancel/:orderId
