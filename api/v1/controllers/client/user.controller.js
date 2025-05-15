@@ -5,6 +5,7 @@ const ForgotPassword = require("../../models/forgot-password.model");
 const generateHelper = require("../../helper/generate");
 const sendMailHelper = require("../../helper/sendMail");
 const Cart = require('../../models/cart.model');
+const Order = require('../../models/order.model');
 
 // [POST]/api/v1/users/register
 module.exports.register = async (req, res) => {
@@ -264,6 +265,26 @@ module.exports.changePass = async (req, res) => {
 
     } catch (error) {
         return res.json({
+            code: 500,
+            message: "Có lỗi xảy ra" + error.message,
+        });
+    }
+};
+
+// [GET]/api/v1/user/orders
+module.exports.orderUser = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const data = await Order.find({
+            user_id: userId
+        })
+        res.json({
+            code: 200,
+            message: "Lấy danh sách order thành công!",
+            data: data
+        });
+    } catch (error) {
+        res.json({
             code: 500,
             message: "Có lỗi xảy ra" + error.message,
         });
