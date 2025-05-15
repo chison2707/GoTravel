@@ -25,6 +25,15 @@ module.exports.detail = async (req, res) => {
         status: "active"
     });
     const tourDetailObj = tourDetail.toObject();
+
+
     tourDetailObj.price_special = tourDetail.price * (1 - tourDetail.discount / 100);
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    tourDetailObj.timeStarts = tourDetailObj.timeStarts.filter(start => {
+        return new Date(start.timeDepart) >= today;
+    });
     res.json(tourDetailObj);
 }
