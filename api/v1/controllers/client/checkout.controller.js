@@ -336,7 +336,7 @@ module.exports.createPayment = async (req, res) => {
         const paymentUrl = vnpay.buildPaymentUrl({
             vnp_Amount: order.totalPrice,
             vnp_IpAddr: req.ip || "127.0.0.1",
-            vnp_TxnRef: order.orderCode,
+            vnp_TxnRef: order.orderCode + Date.now(),
             vnp_OrderInfo: 'Thanh toan don hang ' + order._id,
             vnp_OrderType: "other",
             vnp_ReturnUrl: "http://localhost:3000/api/v1/checkout/success",
