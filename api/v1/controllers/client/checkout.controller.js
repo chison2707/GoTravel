@@ -99,7 +99,7 @@ module.exports.index = async (req, res) => {
 //[POST] api/v1/checkout/order
 module.exports.order = async (req, res) => {
     const cartId = req.cart.id;
-    const { fullName, phone, email, note, voucherCode } = req.body;
+    const { fullName, phone, email, note, voucherCode } = req.body.userInfor;
 
     const user_id = req.user.id;
 
