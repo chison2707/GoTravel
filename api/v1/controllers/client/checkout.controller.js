@@ -374,9 +374,9 @@ module.exports.paymentCallback = async (req, res) => {
 
     const vnp_OrderInfo = verify.vnp_OrderInfo;
     const parts = vnp_OrderInfo.split(' ');
-    const orderCode = parts[parts.length - 1];
+    const idOrder = parts[parts.length - 1];
     const order = await Order.findOneAndUpdate(
-        { orderCode: orderCode },
+        { _id: idOrder },
         { status: "paid", paymentInfo: verify },
         { new: true }
     );
