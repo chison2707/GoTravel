@@ -59,6 +59,19 @@ module.exports.index = async (req, res) => {
         createdAt: { $lt: fifteenMinutesAgo }
     });
 
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    await Tour.updateMany(
+        {},
+        {
+            $pull: {
+                timeStarts: {
+                    timeDepart: { $lt: today }
+                }
+            }
+        }
+    );
 
     res.json({
         topSallers: topSallers,
