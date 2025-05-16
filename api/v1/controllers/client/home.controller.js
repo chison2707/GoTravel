@@ -1,6 +1,7 @@
 const Tour = require("../../models/tour.model");
 const Hotel = require("../../models/hotel.model");
 const Review = require("../../models/hotelReview.model");
+const Order = require("../../models/order.model");
 
 // [GET]/api/v1/
 module.exports.index = async (req, res) => {
@@ -51,6 +52,13 @@ module.exports.index = async (req, res) => {
     const topRatedHotels = hotelWithRating
         .sort((a, b) => b.averageRating - a.averageRating)
         .slice(0, 5);
+
+    const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
+    await Order.deleteMany({
+        status: "pending",
+        createdAt: { $lt: fifteenMinutesAgo }
+    });
+
 
     res.json({
         topSallers: topSallers,

@@ -361,37 +361,13 @@ module.exports.paymentCallback = async (req, res) => {
     try {
         verify = vnpay.verifyReturnUrl(req.query);
         if (!verify.isVerified) {
-            return res.send(`
-                <html>
-                    <body>
-                        <h1>Xác thực tính toàn vẹn dữ liệu thất bại</h1>
-                        <p>Vui lòng liên hệ hỗ trợ qua email: ${req.settingGeneral.email} hoặc số điện thoại: ${req.settingGeneral.phone}</p>
-                        <a href="/">Quay lại trang chủ</a>
-                    </body>
-                </html>
-            `);
+            return res.redirect(`${process.env.FE_URL}/payment-result?status=invalid`);
         }
         if (!verify.isSuccess) {
-            return res.send(`
-                <html>
-                    <body>
-                        <h1>Đơn hàng thanh toán thất bại</h1>
-                        <p>Vui lòng thử lại hoặc liên hệ hỗ trợ qua email: ${req.settingGeneral.email} hoặc số điện thoại: ${req.settingGeneral.phone}</p>
-                        <a href="/">Quay lại trang chủ</a>
-                    </body>
-                </html>
-            `);
+            return res.redirect(`${process.env.FE_URL}/payment-result?status=fail`);
         }
     } catch (error) {
-        return res.send(`
-            <html>
-                <body>
-                    <h1>Dữ liệu không hợp lệ</h1>
-                    <p>Vui lòng liên hệ hỗ trợ qua email: ${req.settingGeneral.email} hoặc số điện thoại: ${req.settingGeneral.phone}</p>
-                    <a href="/">Quay lại trang chủ</a>
-                </body>
-            </html>
-        `);
+        return res.redirect(`${process.env.FE_URL}/payment-result?status=error`);
     }
 
     // Kiểm tra thông tin đơn hàng và xử lý tương ứng
@@ -401,24 +377,10 @@ module.exports.paymentCallback = async (req, res) => {
         { status: "paid", paymentInfo: verify },
         { new: true }
     );
-
-    // Kiểm tra order có tồn tại không
-    if (!order) {
-        return res.send(`
-            <html>
-                <body>
-                    <h1>Đơn hàng không tồn tại</h1>
-                    <p>Vui lòng liên hệ hỗ trợ qua email: ${req.settingGeneral.email} hoặc số điện thoại: ${req.settingGeneral.phone}</p>
-                    <a href="/">Quay lại trang chủ</a>
-                </body>
-            </html>
-        `);
-    }
-
-    // Gửi email xác nhận
-    const subject = `Cảm ơn ${order.userInfor.fullName} đã tin tưởng dịch vụ của chúng tôi!`;
+    // gửi otp qua email user
+    const subject = `Cảm ơn ${req.user.fullName} đã tin tưởng dịch vụ của chúng tôi!`;
     const html = `
-        <p>Chào <strong>${order.userInfor.fullName}</strong>,</p>
+        <p>Chào <strong>${req.user.fullName}</strong>,</p>
         <p>
             Cảm ơn bạn đã đặt dịch vụ tại <strong>${req.settingGeneral.websiteName}</strong>!<br>
             Chúng tôi rất vui được bạn tin tưởng chọn dịch vụ của chúng tôi.
@@ -430,20 +392,10 @@ module.exports.paymentCallback = async (req, res) => {
         <p>Thân mến,<br>
         <strong>${req.settingGeneral.websiteName}</strong></p>`;
 
-    await sendMailHelper.sendMail(order.userInfor.email, subject, html);
+    sendMailHelper.sendMail(req.user.email, subject, html);
 
-    // Trả về trang HTML thành công
-    return res.send(`
-        <html>
-            <body>
-                <h1>Thanh toán thành công</h1>
-                <p>Cảm ơn bạn đã đặt hàng! Mã đơn hàng của bạn là: <strong>${order.orderCode}</strong></p>
-                <p>Chúng tôi đã gửi email xác nhận đến <strong>${order.userInfor.email}</strong>.</p>
-                <p>Mọi thắc mắc, vui lòng liên hệ qua email: ${req.settingGeneral.email} hoặc số điện thoại: ${req.settingGeneral.phone}</p>
-                <a href="/">Quay lại trang chủ</a>
-            </body>
-        </html>
-    `);
+
+    return res.redirect(`${process.env.FE_URL}/payment-result?status=success&orderCode=${orderCode}`);
 };
 
 // [PATCH] api/v1/checkout/cancel/:orderId
