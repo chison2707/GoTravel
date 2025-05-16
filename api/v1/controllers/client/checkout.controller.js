@@ -378,9 +378,9 @@ module.exports.paymentCallback = async (req, res) => {
         { new: true }
     );
     // gửi otp qua email user
-    const subject = `Cảm ơn ${req.user.fullName} đã tin tưởng dịch vụ của chúng tôi!`;
+    const subject = `Cảm ơn ${order.userInfor.fullName} đã tin tưởng dịch vụ của chúng tôi!`;
     const html = `
-        <p>Chào <strong>${req.user.fullName}</strong>,</p>
+        <p>Chào <strong>${order.userInfor.fullName}</strong>,</p>
         <p>
             Cảm ơn bạn đã đặt dịch vụ tại <strong>${req.settingGeneral.websiteName}</strong>!<br>
             Chúng tôi rất vui được bạn tin tưởng chọn dịch vụ của chúng tôi.
@@ -392,7 +392,7 @@ module.exports.paymentCallback = async (req, res) => {
         <p>Thân mến,<br>
         <strong>${req.settingGeneral.websiteName}</strong></p>`;
 
-    sendMailHelper.sendMail(req.user.email, subject, html);
+    sendMailHelper.sendMail(order.userInfor.email, subject, html);
 
 
     return res.redirect(`${process.env.FE_URL}/payment-result?status=success&orderCode=${orderCode}`);
