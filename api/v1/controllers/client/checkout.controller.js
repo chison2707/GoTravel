@@ -371,7 +371,10 @@ module.exports.paymentCallback = async (req, res) => {
     }
 
     // Kiểm tra thông tin đơn hàng và xử lý tương ứng
-    const orderCode = verify.vnp_TxnRef;
+
+    const vnp_OrderInfo = verify.vnp_OrderInfo;
+    const parts = vnp_OrderInfo.split(' ');
+    const orderCode = parts[parts.length - 1];
     const order = await Order.findOneAndUpdate(
         { orderCode: orderCode },
         { status: "paid", paymentInfo: verify },
