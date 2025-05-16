@@ -398,7 +398,7 @@ module.exports.paymentCallback = async (req, res) => {
     sendMailHelper.sendMail(order.userInfor.email, subject, html);
 
 
-    return res.redirect(`${process.env.FE_URL}/payment-result?status=success&orderCode=${orderCode}`);
+    return res.redirect(`${process.env.FE_URL}/payment-result?status=success&orderCode=${order.orderCode}`);
 };
 
 // [PATCH] api/v1/checkout/cancel/:orderId
