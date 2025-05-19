@@ -25,7 +25,7 @@ module.exports.getChatResponse = async (req, res) => {
         const year = currentDate.getFullYear();
 
         let suggestedTours = "";
-        const tours = await Tour.find();
+        const tours = await Tour.find().limit(5).select("title price");;
         if (tours.length > 0) {
             suggestedTours = "Dưới đây là một số tour bạn có thể tham khảo:\n" +
                 tours.map(tour => `- ${tour.title} (${tour.price} VND)`).join("\n");
