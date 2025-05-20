@@ -290,3 +290,25 @@ module.exports.orderUser = async (req, res) => {
         });
     }
 };
+
+// [GET]/api/v1/user/ordersDetail/:id
+module.exports.orderDetail = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const orderId = req.params.id;
+        const data = await Order.findOne({
+            _id: orderId,
+            user_id: userId
+        })
+        res.json({
+            code: 200,
+            message: "Order chi tiết!",
+            data: data
+        });
+    } catch (error) {
+        res.json({
+            code: 500,
+            message: "Có lỗi xảy ra" + error.message,
+        });
+    }
+};
