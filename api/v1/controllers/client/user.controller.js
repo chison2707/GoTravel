@@ -167,11 +167,11 @@ module.exports.otpPassword = async (req, res) => {
 
 // [POST]/api/v1/users/password/reset
 module.exports.resetPassword = async (req, res) => {
-    const token = req.body.token;
+    const email = req.body.email;
     const password = req.body.password;
 
     const user = await User.findOne({
-        token: token
+        email: email
     });
     const isMatch = await bcrypt.compare(password, user.password);
     if (isMatch) {
@@ -183,7 +183,7 @@ module.exports.resetPassword = async (req, res) => {
     }
     const hashedPassword = await bcrypt.hash(password, saltRounds);
     await User.updateOne({
-        token: token
+        email: email
     }, {
         password: hashedPassword
     });
