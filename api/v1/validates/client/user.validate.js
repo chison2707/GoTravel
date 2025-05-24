@@ -75,11 +75,11 @@ module.exports.resetPasswordPost = (req, res, next) => {
         errors.push("Vui lòng nhập xác nhận mật khẩu!")
     }
 
-    if (req.body.password != req.body.confirmPassword) {
+    if (req.body.password !== req.body.confirmPassword) {
         errors.push("Xác nhận mật khẩu không trùng khớp!")
     }
 
-    if (req.body.password.length < 6) {
+    if (password && password.length < 6) {
         errors.push("Mật khẩu phải có ít nhất 6 ký tự!");
     }
 
