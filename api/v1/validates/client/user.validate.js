@@ -79,7 +79,7 @@ module.exports.resetPasswordPost = (req, res, next) => {
         errors.push("Xác nhận mật khẩu không trùng khớp!")
     }
 
-    if (password.length < 6) {
+    if (req.body.password && req.body.password.length < 6) {
         errors.push("Mật khẩu phải có ít nhất 6 ký tự!");
     }
 
