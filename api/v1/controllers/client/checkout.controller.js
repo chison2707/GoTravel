@@ -373,7 +373,7 @@ module.exports.paymentCallback = async (req, res) => {
   <p>
     Dưới đây là thông tin đơn hàng của bạn:
     <ul>
-      <li><strong>Mã đơn hàng:</strong> ${order.code}</li>
+      <li><strong>Mã đơn hàng:</strong> ${order.orderCode}</li>
       <li><strong>Ngày đặt:</strong> ${new Date(order.createdAt).toLocaleDateString('vi-VN')}</li>
       <li><strong>Tổng thanh toán:</strong> ${order.totalPrice.toLocaleString('vi-VN')} VNĐ</li>
     </ul>
